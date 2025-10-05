@@ -1,36 +1,3 @@
 @import "tailwindcss";
 
 
-:root {
-  font-family: "Alan Sans", sans-serif;
-}
-
-@keyframes gradientShift {
-  0% {
-    background: radial-gradient(circle at center, #a855f7, #0a0a0a 60%);
-    background-position: 50% 50%;
-  }
-  25% {
-    background: radial-gradient(circle at center, #c084fc, #0a0a0a 85%);
-    background-position: 60% 40%;
-  }
-  50% {
-    background: radial-gradient(circle at center, #9333ea, #0a0a0a 85%);
-    background-position: 50% 60%;
-  }
-  75% {
-    background: radial-gradient(circle at center, #b794f4, #0a0a0a 85%);
-    background-position: 40% 40%;
-  }
-  100% {
-    background: radial-gradient(circle at center, #a855f7, #0a0a0a 85%);
-    background-position: 50% 50%;
-  }
-}
-
-.bg-animated {
-  animation: gradientShift 60s linear infinite;
-  background-size: 400% 400%;
-  background-attachment: fixed;
-}
-

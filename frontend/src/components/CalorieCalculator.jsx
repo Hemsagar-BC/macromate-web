@@ -1,5 +1,6 @@
-// components/CalorieCalculator.jsx
 import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { ChevronDown, ChevronUp, Activity, Target, TrendingUp, TrendingDown } from 'lucide-react';
 
 const CalorieCalculator = ({ onBack }) => {
   const [formData, setFormData] = useState({
@@ -11,6 +12,8 @@ const CalorieCalculator = ({ onBack }) => {
   });
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [selectedGoal, setSelectedGoal] = useState('maintain');
+  const [expandedSection, setExpandedSection] = useState(null);
 
   const activityLevels = {
     sedentary: { 
@@ -70,13 +73,15 @@ const CalorieCalculator = ({ onBack }) => {
       }
 
       const tdee = bmr * activityMultiplier;
-      
       const maintainCalories = Math.round(tdee);
-      const mildWeightLoss = Math.round(tdee - 250);
-      const weightLoss = Math.round(tdee - 500);
-      const extremeWeightLoss = Math.round(tdee - 750);
-      const weightGain = Math.round(tdee + 300);
-      const fastWeightGain = Math.round(tdee + 500);
+      
+      // Using the formula: Calories = Maintenance ± (1100 × kg per week)
+      const mildWeightLoss = Math.round(maintainCalories - (1100 * 0.25));
+      const weightLoss = Math.round(maintainCalories - (1100 * 0.5));
+      const extremeWeightLoss = Math.round(maintainCalories - (1100 * 1));
+      const mildWeightGain = Math.round(maintainCalories + (1100 * 0.25));
+      const weightGain = Math.round(maintainCalories + (1100 * 0.5));
+      const extremeWeightGain = Math.round(maintainCalories + (1100 * 1));
 
       const heightM = height / 100;
       const bmi = weight / (heightM * heightM);
@@ -93,33 +98,22 @@ const CalorieCalculator = ({ onBack }) => {
         recommendationColor = "text-orange-600 bg-orange-50 border-orange-200";
       }
 
-      const proteinCals = Math.round(maintainCalories * 0.25);
-      const carbCals = Math.round(maintainCalories * 0.45);
-      const fatCals = Math.round(maintainCalories * 0.30);
-
-      const proteinGrams = Math.round(proteinCals / 4);
-      const carbGrams = Math.round(carbCals / 4);
-      const fatGrams = Math.round(fatCals / 9);
-
       setResult({
         bmr: Math.round(bmr),
         tdee: maintainCalories,
         activityLevel: activityLevels[formData.activityLevel].label,
+        activityMultiplier: activityLevels[formData.activityLevel].multiplier,
         goals: {
           maintain: maintainCalories,
           mildLoss: mildWeightLoss,
           weightLoss: weightLoss,
           extremeLoss: extremeWeightLoss,
+          mildGain: mildWeightGain,
           weightGain: weightGain,
-          fastGain: fastWeightGain
+          extremeGain: extremeWeightGain
         },
         recommendation,
         recommendationColor,
-        macros: {
-          protein: { grams: proteinGrams, calories: proteinCals, percentage: 25 },
-          carbs: { grams: carbGrams, calories: carbCals, percentage: 45 },
-          fat: { grams: fatGrams, calories: fatCals, percentage: 30 }
-        },
         userInfo: {
           age,
           height,
@@ -142,13 +136,147 @@ const CalorieCalculator = ({ onBack }) => {
       activityLevel: 'sedentary'
     });
     setResult(null);
+    setSelectedGoal('maintain');
+    setExpandedSection(null);
   };
 
+  const calculateMacros = (calories) => {
+    const proteinCals = Math.round(calories * 0.25);
+    const carbCals = Math.round(calories * 0.45);
+    const fatCals = Math.round(calories * 0.30);
+
+    return {
+      protein: { grams: Math.round(proteinCals / 4), calories: proteinCals, percentage: 25 },
+      carbs: { grams: Math.round(carbCals / 4), calories: carbCals, percentage: 45 },
+      fat: { grams: Math.round(fatCals / 9), calories: fatCals, percentage: 30 }
+    };
+  };
+
+  const goalCards = result ? [
+    {
+      id: 'maintain',
+      title: 'Maintain Weight',
+      calories: result.goals.maintain,
+      rate: 'Maintenance',
+      color: 'from-green-400 to-emerald-500',
+      bgColor: 'bg-green-50',
+      borderColor: 'border-green-200',
+      textColor: 'text-green-700',
+      icon: <Target className="w-6 h-6" />
+    },
+    {
+      id: 'mildLoss',
+      title: 'Mild Weight Loss',
+      calories: result.goals.mildLoss,
+      rate: '0.25 kg/week',
+      color: 'from-yellow-400 to-orange-400',
+      bgColor: 'bg-yellow-50',
+      borderColor: 'border-yellow-200',
+      textColor: 'text-yellow-700',
+      icon: <TrendingDown className="w-6 h-6" />
+    },
+    {
+      id: 'weightLoss',
+      title: 'Weight Loss',
+      calories: result.goals.weightLoss,
+      rate: '0.5 kg/week',
+      color: 'from-orange-400 to-orange-500',
+      bgColor: 'bg-green-50',
+      borderColor: 'border-green-200',
+      textColor: 'text-orange-700',
+      icon: <TrendingDown className="w-6 h-6" />
+    },
+    {
+      id: 'extremeLoss',
+      title: 'Extreme Weight Loss',
+      calories: result.goals.extremeLoss,
+      rate: '1 kg/week',
+      color: 'from-red-400 to-red-500',
+      bgColor: 'bg-red-50',
+      borderColor: 'border-red-200',
+      textColor: 'text-red-700',
+      icon: <TrendingDown className="w-6 h-6" />
+    },
+    {
+      id: 'mildGain',
+      title: 'Mild Weight Gain',
+      calories: result.goals.mildGain,
+      rate: '0.25 kg/week',
+      color: 'from-blue-400 to-blue-500',
+      bgColor: 'bg-yellow-50',
+      borderColor: 'border-yellow-200',
+      textColor: 'text-blue-700',
+      icon: <TrendingUp className="w-6 h-6" />
+    },
+    {
+      id: 'weightGain',
+      title: 'Weight Gain',
+      calories: result.goals.weightGain,
+      rate: '0.5 kg/week',
+      color: 'from-indigo-400 to-indigo-500',
+      bgColor: 'bg-green-50',
+      borderColor: 'border-green-200',
+      textColor: 'text-indigo-700',
+      icon: <TrendingUp className="w-6 h-6" />
+    },
+    {
+      id: 'extremeGain',
+      title: 'Extreme Weight Gain',
+      calories: result.goals.extremeGain,
+      rate: '1 kg/week',
+      color: 'from-purple-400 to-purple-500',
+      bgColor: 'bg-red-50',
+      borderColor: 'border-red-200',
+      textColor: 'text-red-700',
+      icon: <TrendingUp className="w-6 h-6" />
+    }
+  ] : [];
+
+  const ExpandableSection = ({ title, isExpanded, onToggle, children }) => (
+    <motion.div 
+      className="bg-white rounded-2xl shadow-lg overflow-hidden mb-6"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4 }}
+    >
+      <button
+        onClick={onToggle}
+        className="w-full px-6 py-4 flex items-center justify-between hover:bg-gray-50 transition-colors"
+      >
+        <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">
+          📚 {title}
+        </h3>
+        {isExpanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+      </button>
+      <AnimatePresence>
+        {isExpanded && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.3 }}
+            className="overflow-hidden"
+          >
+            <div className="px-6 pb-6 text-gray-700 leading-relaxed">
+              {children}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </motion.div>
+  );
+
   if (result) {
+    const selectedMacros = calculateMacros(result.goals[selectedGoal]);
+
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-50 to-orange-50 pt-20">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-          <div className="flex items-center justify-between mb-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
+          <motion.div 
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="flex items-center justify-between mb-8"
+          >
             <button 
               onClick={onBack}
               className="flex items-center text-gray-600 hover:text-orange-600 transition-colors duration-200"
@@ -158,164 +286,310 @@ const CalorieCalculator = ({ onBack }) => {
               </svg>
               Back to Calculators
             </button>
-            <h1 className="text-3xl font-bold text-gray-800">Calorie Results</h1>
-          </div>
+            <h1 className="text-2xl md:text-3xl font-bold text-gray-800">Your Results</h1>
+          </motion.div>
 
-          <div className={`mb-8 p-6 rounded-2xl border-2 ${result.recommendationColor}`}>
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.1 }}
+            className={`mb-8 p-6 rounded-2xl border-2 ${result.recommendationColor}`}
+          >
             <h2 className="text-xl font-bold mb-2">Health Recommendation</h2>
             <p className="text-lg">{result.recommendation}</p>
+          </motion.div>
+
+          <div className="grid md:grid-cols-3 gap-6 mb-8">
+            {[
+              { icon: '🔥', title: 'Basal Metabolic Rate', value: result.bmr, unit: 'calories/day at rest', desc: 'Calories your body burns just to stay alive' },
+              { icon: '⚡', title: 'Total Daily Energy', value: result.tdee, unit: 'calories/day total', desc: `With ${result.activityLevel} lifestyle` },
+              { icon: '📊', title: 'Your BMI', value: result.userInfo.bmi, unit: 'Body Mass Index', desc: `${result.userInfo.weight}kg, ${result.userInfo.height}cm` }
+            ].map((card, index) => (
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 + index * 0.1 }}
+                whileHover={{ y: -5, boxShadow: '0 20px 40px rgba(0,0,0,0.1)' }}
+                className="bg-white rounded-2xl shadow-xl p-6"
+              >
+                <div className="text-center">
+                  <div className="text-4xl mb-4">{card.icon}</div>
+                  <h3 className="text-lg font-semibold text-gray-800 mb-2">{card.title}</h3>
+                  <div className="text-3xl font-bold text-orange-600 mb-2">{card.value}</div>
+                  <div className="text-sm text-gray-600">{card.unit}</div>
+                  <div className="mt-4 text-xs text-gray-500">{card.desc}</div>
+                </div>
+              </motion.div>
+            ))}
           </div>
 
-          <div className="grid lg:grid-cols-3 gap-8 mb-8">
-            <div className="bg-white rounded-2xl shadow-xl p-6">
-              <div className="text-center">
-                <div className="text-4xl mb-4">🔥</div>
-                <h3 className="text-lg font-semibold text-gray-800 mb-2">Basal Metabolic Rate</h3>
-                <div className="text-3xl font-bold text-orange-600 mb-2">{result.bmr}</div>
-                <div className="text-sm text-gray-600">calories/day at rest</div>
-                <div className="mt-4 text-xs text-gray-500">
-                  Calories your body burns just to stay alive
-                </div>
-              </div>
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5 }}
+            className="bg-white rounded-2xl shadow-xl p-6 md:p-8 mb-8"
+          >
+            <h3 className="text-2xl font-bold text-gray-800 mb-2 text-center">Your Daily Calorie Goals</h3>
+            <p className="text-center font-semibold text-orange-600 mb-6 text-sm">
+              💡 Click on any calorie goal below to see personalized macros for that target
+            </p>
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              {goalCards.map((goal, index) => (
+                <motion.button
+                  key={goal.id}
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: 0.6 + index * 0.05 }}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => setSelectedGoal(goal.id)}
+                  className={`text-center p-5 rounded-xl border-2 transition-all ${
+                    selectedGoal === goal.id 
+                      ? `${goal.bgColor} ${goal.borderColor} shadow-lg` 
+                      : 'bg-white border-gray-200 hover:border-gray-300'
+                  }`}
+                >
+                  <div className={`flex justify-center mb-3 ${selectedGoal === goal.id ? goal.textColor : 'text-gray-400'}`}>
+                    {goal.icon}
+                  </div>
+                  <h4 className={`font-semibold mb-2 text-sm ${selectedGoal === goal.id ? goal.textColor : 'text-gray-700'}`}>
+                    {goal.title}
+                  </h4>
+                  <div className={`text-2xl font-bold mb-1 ${selectedGoal === goal.id ? 'text-gray-900' : 'text-gray-600'}`}>
+                    {goal.calories}
+                  </div>
+                  <div className="text-xs text-gray-600 mb-2">calories/day</div>
+                  <div className="text-xs text-gray-500">{goal.rate}</div>
+                </motion.button>
+              ))}
             </div>
+          </motion.div>
 
-            <div className="bg-white rounded-2xl shadow-xl p-6">
-              <div className="text-center">
-                <div className="text-4xl mb-4">⚡</div>
-                <h3 className="text-lg font-semibold text-gray-800 mb-2">Total Daily Energy</h3>
-                <div className="text-3xl font-bold text-orange-600 mb-2">{result.tdee}</div>
-                <div className="text-sm text-gray-600">calories/day total</div>
-                <div className="mt-4 text-xs text-gray-500">
-                  With {result.activityLevel} lifestyle
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white rounded-2xl shadow-xl p-6">
-              <div className="text-center">
-                <div className="text-4xl mb-4">📊</div>
-                <h3 className="text-lg font-semibold text-gray-800 mb-2">Your BMI</h3>
-                <div className="text-3xl font-bold text-orange-600 mb-2">{result.userInfo.bmi}</div>
-                <div className="text-sm text-gray-600">Body Mass Index</div>
-                <div className="mt-4 text-xs text-gray-500">
-                  {result.userInfo.weight}kg, {result.userInfo.height}cm
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-2xl shadow-xl p-8 mb-8">
-            <h3 className="text-2xl font-bold text-gray-800 mb-6 text-center">Daily Calorie Goals</h3>
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-              <div className="text-center p-6 bg-green-50 rounded-xl border-2 border-green-200">
-                <h4 className="font-semibold text-green-800 mb-2">Maintain Weight</h4>
-                <div className="text-2xl font-bold text-green-600 mb-1">{result.goals.maintain}</div>
-                <div className="text-sm text-green-600">calories/day</div>
-                <div className="text-xs text-gray-500 mt-2">100%</div>
-              </div>
-              
-              <div className="text-center p-6 bg-yellow-50 rounded-xl border-2 border-yellow-200">
-                <h4 className="font-semibold text-yellow-800 mb-2">Mild Weight Loss</h4>
-                <div className="text-2xl font-bold text-yellow-600 mb-1">{result.goals.mildLoss}</div>
-                <div className="text-sm text-yellow-600">calories/day</div>
-                <div className="text-xs text-gray-500 mt-2">0.25 kg/week</div>
-              </div>
-              
-              <div className="text-center p-6 bg-orange-50 rounded-xl border-2 border-orange-200">
-                <h4 className="font-semibold text-orange-800 mb-2">Weight Loss</h4>
-                <div className="text-2xl font-bold text-orange-600 mb-1">{result.goals.weightLoss}</div>
-                <div className="text-sm text-orange-600">calories/day</div>
-                <div className="text-xs text-gray-500 mt-2">0.5 kg/week</div>
-              </div>
-              
-              <div className="text-center p-6 bg-red-50 rounded-xl border-2 border-red-200">
-                <h4 className="font-semibold text-red-800 mb-2">Extreme Weight Loss</h4>
-                <div className="text-2xl font-bold text-red-600 mb-1">{result.goals.extremeLoss}</div>
-                <div className="text-sm text-red-600">calories/day</div>
-                <div className="text-xs text-gray-500 mt-2">0.75 kg/week</div>
-              </div>
-              
-              <div className="text-center p-6 bg-blue-50 rounded-xl border-2 border-blue-200">
-                <h4 className="font-semibold text-blue-800 mb-2">Weight Gain</h4>
-                <div className="text-2xl font-bold text-blue-600 mb-1">{result.goals.weightGain}</div>
-                <div className="text-sm text-blue-600">calories/day</div>
-                <div className="text-xs text-gray-500 mt-2">Lean muscle gain</div>
-              </div>
-              
-              <div className="text-center p-6 bg-purple-50 rounded-xl border-2 border-purple-200">
-                <h4 className="font-semibold text-purple-800 mb-2">Fast Weight Gain</h4>
-                <div className="text-2xl font-bold text-purple-600 mb-1">{result.goals.fastGain}</div>
-                <div className="text-sm text-purple-600">calories/day</div>
-                <div className="text-xs text-gray-500 mt-2">Rapid weight gain</div>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-2xl shadow-xl p-8 mb-8">
-            <h3 className="text-2xl font-bold text-gray-800 mb-6 text-center">
-              Recommended Macros (for {result.goals.maintain} calories)
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.8 }}
+            className="bg-white rounded-2xl shadow-xl p-6 md:p-8 mb-8"
+          >
+            <h3 className="text-2xl font-bold text-gray-800 mb-2 text-center">
+              Recommended Macros
             </h3>
+            <p className="text-center text-gray-600 mb-6">
+              For your selected goal: <span className="font-semibold text-orange-600">
+                {goalCards.find(g => g.id === selectedGoal)?.title}
+              </span> ({result.goals[selectedGoal]} calories/day)
+            </p>
             <div className="grid md:grid-cols-3 gap-6">
-              <div className="text-center p-6 bg-gradient-to-br from-red-50 to-red-100 rounded-xl">
-                <div className="text-3xl mb-3">🥩</div>
-                <h4 className="font-semibold text-red-800 mb-2">Protein</h4>
-                <div className="text-2xl font-bold text-red-600 mb-1">{result.macros.protein.grams}g</div>
-                <div className="text-sm text-red-600 mb-2">{result.macros.protein.calories} calories</div>
-                <div className="text-xs text-gray-600">{result.macros.protein.percentage}% of total</div>
-              </div>
-              
-              <div className="text-center p-6 bg-gradient-to-br from-yellow-50 to-yellow-100 rounded-xl">
-                <div className="text-3xl mb-3">🍞</div>
-                <h4 className="font-semibold text-yellow-800 mb-2">Carbohydrates</h4>
-                <div className="text-2xl font-bold text-yellow-600 mb-1">{result.macros.carbs.grams}g</div>
-                <div className="text-sm text-yellow-600 mb-2">{result.macros.carbs.calories} calories</div>
-                <div className="text-xs text-gray-600">{result.macros.carbs.percentage}% of total</div>
-              </div>
-              
-              <div className="text-center p-6 bg-gradient-to-br from-green-50 to-green-100 rounded-xl">
-                <div className="text-3xl mb-3">🥑</div>
-                <h4 className="font-semibold text-green-800 mb-2">Fats</h4>
-                <div className="text-2xl font-bold text-green-600 mb-1">{result.macros.fat.grams}g</div>
-                <div className="text-sm text-green-600 mb-2">{result.macros.fat.calories} calories</div>
-                <div className="text-xs text-gray-600">{result.macros.fat.percentage}% of total</div>
-              </div>
+              {[
+                { name: 'Protein', icon: '🥩', color: 'red', data: selectedMacros.protein },
+                { name: 'Carbohydrates', icon: '🍞', color: 'yellow', data: selectedMacros.carbs },
+                { name: 'Fats', icon: '🥑', color: 'green', data: selectedMacros.fat }
+              ].map((macro, index) => (
+                <motion.div
+                  key={macro.name}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.9 + index * 0.1 }}
+                  whileHover={{ y: -5 }}
+                  className={`text-center p-6 bg-gradient-to-br from-${macro.color}-50 to-${macro.color}-100 rounded-xl`}
+                >
+                  <div className="text-3xl mb-3">{macro.icon}</div>
+                  <h4 className={`font-semibold text-${macro.color}-800 mb-2`}>{macro.name}</h4>
+                  <div className={`text-2xl font-bold text-${macro.color}-600 mb-1`}>{macro.data.grams}g</div>
+                  <div className={`text-sm text-${macro.color}-600 mb-2`}>{macro.data.calories} calories</div>
+                  <div className="text-xs text-gray-600">{macro.data.percentage}% of total</div>
+                </motion.div>
+              ))}
             </div>
-          </div>
+          </motion.div>
 
-          <div className="bg-white rounded-2xl shadow-xl p-8 mb-8">
-            <h3 className="text-xl font-bold text-gray-800 mb-4">Calculation Method</h3>
-            <div className="grid md:grid-cols-2 gap-6">
-              <div>
-                <h4 className="font-semibold text-gray-700 mb-2">Mifflin-St Jeor Equation (BMR):</h4>
-                <div className="text-sm text-gray-600 space-y-1">
-                  <div><strong>Men:</strong> BMR = (10 × weight) + (6.25 × height) - (5 × age) + 5</div>
-                  <div><strong>Women:</strong> BMR = (10 × weight) + (6.25 × height) - (5 × age) - 161</div>
-                </div>
-              </div>
-              <div>
-                <h4 className="font-semibold text-gray-700 mb-2">Total Daily Energy Expenditure:</h4>
-                <div className="text-sm text-gray-600">
-                  <div><strong>TDEE = BMR × Activity Factor</strong></div>
-                  <div className="mt-2">Your calculation: {result.bmr} × {activityLevels[formData.activityLevel].multiplier} = {result.tdee} calories</div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <button
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 1.1 }}
+            className="flex flex-col sm:flex-row gap-4 justify-center mb-12"
+          >
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
               onClick={resetCalculator}
               className="px-8 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white font-semibold rounded-xl hover:from-orange-600 hover:to-orange-700 transition-all duration-300 shadow-lg hover:shadow-xl"
             >
               Calculate Again
-            </button>
-            <button
+            </motion.button>
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
               onClick={() => window.print()}
               className="px-8 py-3 bg-white text-orange-600 font-semibold rounded-xl border-2 border-orange-500 hover:bg-orange-50 transition-all duration-300 shadow-lg"
             >
               Print Results
-            </button>
-          </div>
+            </motion.button>
+          </motion.div>
+
+          {/* Educational Sections as Cards */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 1.2 }}
+          >
+            <h3 className="text-2xl font-bold text-gray-800 mb-6 text-center">📚 Understanding The Science</h3>
+            
+            <div className="grid md:grid-cols-3 gap-6 mb-8">
+              {/* BMR Card */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 1.3 }}
+                whileHover={{ y: -8, boxShadow: '0 20px 40px rgba(0,0,0,0.15)' }}
+                className="bg-gradient-to-br from-orange-50 to-red-50 rounded-2xl shadow-lg p-6 border-2 border-orange-100 cursor-pointer"
+                onClick={() => setExpandedSection(expandedSection === 'bmr' ? null : 'bmr')}
+              >
+                <div className="flex items-center justify-between mb-4">
+                  <h4 className="text-lg font-bold text-orange-800">🔥 Basal Metabolic Rate</h4>
+                  {expandedSection === 'bmr' ? <ChevronUp className="w-5 h-5 text-orange-600" /> : <ChevronDown className="w-5 h-5 text-orange-600" />}
+                </div>
+                <p className="text-sm text-gray-700 leading-relaxed">
+                  Learn how your body burns calories at complete rest and the science behind BMR calculations.
+                </p>
+              </motion.div>
+
+              {/* Maintenance Card */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 1.4 }}
+                whileHover={{ y: -8, boxShadow: '0 20px 40px rgba(0,0,0,0.15)' }}
+                className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-2xl shadow-lg p-6 border-2 border-green-100 cursor-pointer"
+                onClick={() => setExpandedSection(expandedSection === 'maintenance' ? null : 'maintenance')}
+              >
+                <div className="flex items-center justify-between mb-4">
+                  <h4 className="text-lg font-bold text-green-800">⚖️ Maintenance Calories</h4>
+                  {expandedSection === 'maintenance' ? <ChevronUp className="w-5 h-5 text-green-600" /> : <ChevronDown className="w-5 h-5 text-green-600" />}
+                </div>
+                <p className="text-sm text-gray-700 leading-relaxed">
+                  Discover how we calculate the exact calories needed to maintain your current weight.
+                </p>
+              </motion.div>
+
+              {/* Weight Change Science Card */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 1.5 }}
+                whileHover={{ y: -8, boxShadow: '0 20px 40px rgba(0,0,0,0.15)' }}
+                className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl shadow-lg p-6 border-2 border-blue-100 cursor-pointer"
+                onClick={() => setExpandedSection(expandedSection === 'science' ? null : 'science')}
+              >
+                <div className="flex items-center justify-between mb-4">
+                  <h4 className="text-lg font-bold text-blue-800">🔬 Weight Loss & Gain</h4>
+                  {expandedSection === 'science' ? <ChevronUp className="w-5 h-5 text-blue-600" /> : <ChevronDown className="w-5 h-5 text-blue-600" />}
+                </div>
+                <p className="text-sm text-gray-700 leading-relaxed">
+                  Understand the research-backed formulas behind safe and sustainable weight change.
+                </p>
+              </motion.div>
+            </div>
+
+            {/* Expanded Content */}
+            <AnimatePresence>
+              {expandedSection === 'bmr' && (
+                <motion.div
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: 'auto', opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  transition={{ duration: 0.3 }}
+                  className="overflow-hidden mb-6"
+                >
+                  <div className="bg-white rounded-2xl shadow-lg p-6 md:p-8 border-2 border-orange-100">
+                    <h4 className="text-xl font-bold text-gray-800 mb-4">Understanding Your Basal Metabolic Rate (BMR)</h4>
+                    <div className="text-gray-700 leading-relaxed space-y-4">
+                      <p>
+                        Your <strong>Basal Metabolic Rate (BMR)</strong> is the number of calories your body needs <strong>at complete rest</strong> to maintain vital functions like breathing, circulation, and cell repair. It's essentially the <strong>minimum energy your body burns daily</strong>.
+                      </p>
+                      <p>
+                        The <strong>Mifflin–St Jeor Equation</strong> (1990) is a widely accepted and research-backed formula for estimating BMR. Studies have shown it to be one of the most accurate methods for healthy adults. It calculates your resting energy expenditure based on your <strong>weight, height, age, and sex</strong>:
+                      </p>
+                      <div className="bg-orange-50 p-4 rounded-lg border border-orange-200">
+                        <p className="font-semibold mb-2 text-orange-800">For Men:</p>
+                        <p className="font-mono text-sm mb-4">BMR = 10 × weight (kg) + 6.25 × height (cm) − 5 × age (years) + 5</p>
+                        <p className="font-semibold mb-2 text-orange-800">For Women:</p>
+                        <p className="font-mono text-sm">BMR = 10 × weight (kg) + 6.25 × height (cm) − 5 × age (years) − 161</p>
+                      </div>
+                      <p>
+                        Once you know your BMR, you multiply it by an <strong>Activity Factor</strong> to estimate your <strong>total daily maintenance calories</strong>, which accounts for physical activity:
+                      </p>
+                      <ul className="space-y-1 ml-6 text-gray-700">
+                        <li>• Sedentary: × 1.2</li>
+                        <li>• Lightly active: × 1.375</li>
+                        <li>• Moderately active: × 1.55</li>
+                        <li>• Very active: × 1.725</li>
+                        <li>• Extra active: × 1.9</li>
+                      </ul>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+
+              {expandedSection === 'maintenance' && (
+                <motion.div
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: 'auto', opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  transition={{ duration: 0.3 }}
+                  className="overflow-hidden mb-6"
+                >
+                  <div className="bg-white rounded-2xl shadow-lg p-6 md:p-8 border-2 border-green-100">
+                    <h4 className="text-xl font-bold text-gray-800 mb-4">How Maintenance Calories Are Calculated</h4>
+                    <div className="text-gray-700 leading-relaxed space-y-4">
+                      <p>
+                        Macromate calculates your maintenance calories — the number of calories your body needs to maintain its current weight — using principles from metabolic research and energy balance studies. According to findings published in the American Journal of Clinical Nutrition (Hall et al., 2012) and the Journal of the Academy of Nutrition and Dietetics (Dhurandhar et al., 2015), your body maintains weight when calorie intake equals calorie expenditure through metabolism, activity, and digestion.
+                      </p>
+                      <div className="bg-green-50 p-4 rounded-lg border border-green-200">
+                        <p className="font-semibold mb-2 text-green-800">For Maintenance:</p>
+                        <p className="font-mono text-sm mb-3">Calories/day = Basal Metabolic Rate (BMR) × Activity Factor</p>
+                        <p className="text-sm font-semibold text-green-700">
+                          Your calculation: {result.bmr} × {result.activityMultiplier} = {result.tdee} calories/day
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+
+              {expandedSection === 'science' && (
+                <motion.div
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: 'auto', opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  transition={{ duration: 0.3 }}
+                  className="overflow-hidden mb-6"
+                >
+                  <div className="bg-white rounded-2xl shadow-lg p-6 md:p-8 border-2 border-blue-100">
+                    <h4 className="text-xl font-bold text-gray-800 mb-4">The Science Behind Weight Loss & Gain</h4>
+                    <div className="text-gray-700 leading-relaxed space-y-4">
+                      <p>
+                        Macromate's calorie recommendations are based on well-established nutritional science. According to research published in the American Journal of Clinical Nutrition (Hall et al., 2012), approximately 7,700 calories correspond to 1 kilogram of body weight. Using this principle, your daily calorie needs are calculated through a simple, science-backed approach — by adding calories to promote weight gain or reducing calories to support fat loss.
+                      </p>
+                      <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                        <p className="font-semibold mb-2 text-blue-800">For Weight Gain:</p>
+                        <p className="font-mono text-sm mb-4">Calories/day = Maintenance Calories + (1100 × Target Weight Gain in kg per week)</p>
+                        <p className="font-semibold mb-2 text-blue-800">For Weight Loss:</p>
+                        <p className="font-mono text-sm">Calories/day = Maintenance Calories − (1100 × Target Weight Loss in kg per week)</p>
+                      </div>
+                      <p>
+                        These formulas align with recommendations from the American College of Sports Medicine (ACSM) and the Centers for Disease Control and Prevention (CDC) for safe, sustainable progress. Whether your goal is to build lean muscle or lose fat gradually, Macromate helps you apply these research-backed numbers for real, lasting results. 💪
+                      </p>
+                      <p className="text-sm text-gray-600">
+                        Source: <a href="https://academic.oup.com/ajcn/article/95/3/589/4576812" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline font-medium">American Journal of Clinical Nutrition</a>
+                      </p>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </motion.div>
         </div>
       </div>
     );
@@ -324,7 +598,11 @@ const CalorieCalculator = ({ onBack }) => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-orange-50 pt-20">
       <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="flex items-center justify-between mb-8">
+        <motion.div 
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="flex items-center justify-between mb-8"
+        >
           <button 
             onClick={onBack}
             className="flex items-center text-gray-600 hover:text-orange-600 transition-colors duration-200"
@@ -334,18 +612,34 @@ const CalorieCalculator = ({ onBack }) => {
             </svg>
             Back to Calculators
           </button>
-          <h1 className="text-3xl font-bold text-gray-800">Calorie Calculator</h1>
-        </div>
+          <h1 className="text-2xl md:text-3xl font-bold text-gray-800">Calorie Calculator</h1>
+        </motion.div>
 
-        <div className="bg-white rounded-2xl shadow-xl p-8">
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: 0.1 }}
+          className="bg-white rounded-2xl shadow-xl p-6 md:p-8"
+        >
           <div className="text-center mb-8">
-            <div className="text-6xl mb-4">🔥</div>
+            <motion.div 
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              transition={{ delay: 0.2, type: 'spring' }}
+              className="text-6xl mb-4"
+            >
+              🔥
+            </motion.div>
             <h2 className="text-2xl font-bold text-gray-800 mb-2">Calculate Your Daily Calories</h2>
             <p className="text-gray-600">Get personalized calorie goals based on your lifestyle and goals</p>
           </div>
 
           <div className="space-y-6">
-            <div>
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.3 }}
+            >
               <label className="block text-sm font-medium text-gray-700 mb-2">Age (years)</label>
               <input
                 type="number"
@@ -353,14 +647,18 @@ const CalorieCalculator = ({ onBack }) => {
                 value={formData.age}
                 onChange={handleInputChange}
                 placeholder="e.g., 25"
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent text-lg"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent text-lg transition-all"
               />
-            </div>
+            </motion.div>
 
-            <div>
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.35 }}
+            >
               <label className="block text-sm font-medium text-gray-700 mb-3">Gender</label>
               <div className="flex gap-4">
-                <label className="flex items-center">
+                <label className="flex items-center cursor-pointer">
                   <input
                     type="radio"
                     name="gender"
@@ -371,7 +669,7 @@ const CalorieCalculator = ({ onBack }) => {
                   />
                   <span className="ml-2">Male</span>
                 </label>
-                <label className="flex items-center">
+                <label className="flex items-center cursor-pointer">
                   <input
                     type="radio"
                     name="gender"
@@ -383,9 +681,13 @@ const CalorieCalculator = ({ onBack }) => {
                   <span className="ml-2">Female</span>
                 </label>
               </div>
-            </div>
+            </motion.div>
 
-            <div>
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.4 }}
+            >
               <label className="block text-sm font-medium text-gray-700 mb-2">Height (cm)</label>
               <input
                 type="number"
@@ -393,11 +695,15 @@ const CalorieCalculator = ({ onBack }) => {
                 value={formData.height}
                 onChange={handleInputChange}
                 placeholder="e.g., 170"
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent text-lg"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent text-lg transition-all"
               />
-            </div>
+            </motion.div>
 
-            <div>
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.45 }}
+            >
               <label className="block text-sm font-medium text-gray-700 mb-2">Weight (kg)</label>
               <input
                 type="number"
@@ -405,15 +711,19 @@ const CalorieCalculator = ({ onBack }) => {
                 value={formData.weight}
                 onChange={handleInputChange}
                 placeholder="e.g., 65"
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent text-lg"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent text-lg transition-all"
               />
-            </div>
+            </motion.div>
 
-            <div>
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.5 }}
+            >
               <label className="block text-sm font-medium text-gray-700 mb-3">Activity Level</label>
               <div className="space-y-3">
                 {Object.entries(activityLevels).map(([key, level]) => (
-                  <label key={key} className="flex items-start p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                  <label key={key} className="flex items-start p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors">
                     <input
                       type="radio"
                       name="activityLevel"
@@ -429,10 +739,15 @@ const CalorieCalculator = ({ onBack }) => {
                   </label>
                 ))}
               </div>
-            </div>
+            </motion.div>
           </div>
 
-          <button
+          <motion.button
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.6 }}
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
             onClick={calculateCalories}
             disabled={loading}
             className="w-full mt-8 py-4 bg-gradient-to-r from-orange-500 to-orange-600 text-white font-semibold rounded-xl hover:from-orange-600 hover:to-orange-700 transition-all duration-300 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
@@ -445,8 +760,8 @@ const CalorieCalculator = ({ onBack }) => {
             ) : (
               'Calculate Calories'
             )}
-          </button>
-        </div>
+          </motion.button>
+        </motion.div>
       </div>
     </div>
   );
