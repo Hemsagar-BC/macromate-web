@@ -1,0 +1,26 @@
+name,category,difficulty,equipment,description,calories_per_30min,primary_muscles
+Push-ups,Chest,Beginner,None,"Classic bodyweight exercise for chest, shoulders, and triceps",135,"Chest, Triceps"
+Squats,Legs,Beginner,None,"Compound leg exercise targeting quads, glutes, and hamstrings",180,"Quadriceps, Glutes"
+Lunges,Legs,Beginner,None,Single-leg exercise for leg strength and balance,165,"Quadriceps, Glutes"
+Plank,Core,Beginner,None,Isometric core exercise for abs and lower back,90,Core
+Burpees,Full Body,Intermediate,None,"Full body cardio exercise combining squat, push-up, and jump",300,Full Body
+Pull-ups,Back,Advanced,Pull-up Bar,Upper body pulling exercise for back and biceps,210,"Lats, Biceps"
+Deadlift,Legs,Intermediate,Barbell,"Compound exercise for posterior chain - glutes, hamstrings, back",225,"Hamstrings, Glutes, Lower Back"
+Bench Press,Chest,Intermediate,Barbell,Primary chest building exercise with barbell,195,"Chest, Triceps"
+Barbell Row,Back,Intermediate,Barbell,Back thickness exercise targeting lats and rhomboids,180,"Lats, Rhomboids"
+Shoulder Press,Shoulders,Intermediate,Barbell,Overhead pressing for shoulder development,165,Shoulders
+Bicycle Crunches,Core,Beginner,None,Core exercise targeting obliques and abs,150,"Abs, Obliques"
+Mountain Climbers,Core,Intermediate,None,Dynamic core and cardio exercise,240,"Core, Shoulders"
+Jumping Jacks,Cardio,Beginner,None,Simple cardio warm-up exercise,165,Full Body
+Russian Twists,Core,Intermediate,None,Rotational core exercise for obliques,135,Obliques
+Leg Raises,Core,Intermediate,None,Lower ab targeting exercise,120,Lower Abs
+Dumbbell Curls,Arms,Beginner,Dumbbells,Isolation exercise for bicep development,90,Biceps
+Tricep Dips,Arms,Beginner,Bench,Bodyweight tricep exercise,105,Triceps
+Lat Pulldown,Back,Intermediate,Cable Machine,Back width exercise using cable machine,150,Lats
+Leg Press,Legs,Beginner,Leg Press Machine,Machine-based leg builder,195,Quadriceps
+Calf Raises,Legs,Beginner,None,Calf muscle isolation exercise,75,Calves
+Box Jumps,Legs,Intermediate,Box,Explosive leg power exercise,270,"Quadriceps, Glutes"
+Kettlebell Swings,Full Body,Intermediate,Kettlebell,Dynamic full body power exercise,300,"Glutes, Hamstrings"
+Battle Ropes,Cardio,Advanced,Battle Ropes,High intensity cardio and shoulder workout,315,"Shoulders, Core"
+Wall Sits,Legs,Beginner,None,Isometric quad builder,120,Quadriceps
+Farmer Walks,Full Body,Intermediate,Dumbbells,Grip and full body strength exercise,180,"Forearms, Traps"
