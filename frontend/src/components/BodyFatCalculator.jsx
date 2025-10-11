@@ -56,19 +56,40 @@ const BodyFatCalculator = ({ onBack, handleBackToHero }) => {
   const PieChart = ({ percentage }) => {
     const fat = parseFloat(percentage);
     const lean = 100 - fat;
-    const r = 80;
+    const r = 70;
     const c = 2 * Math.PI * r;
     const fatStroke = (fat / 100) * c;
     const leanStroke = (lean / 100) * c;
+    
     return (
-      <div className="relative w-64 h-64 mx-auto">
-        <svg className="transform -rotate-90" width="256" height="256" viewBox="0 0 256 256">
-          <circle cx="128" cy="128" r={r} fill="none" stroke="#10b981" strokeWidth="60" strokeDasharray={`${leanStroke} ${c}`} />
-          <circle cx="128" cy="128" r={r} fill="none" stroke="#f97316" strokeWidth="60" strokeDasharray={`${fatStroke} ${c}`} strokeDashoffset={-leanStroke} />
+      <div className="relative w-48 h-48 sm:w-56 sm:h-56 md:w-64 md:h-64 mx-auto">
+        <svg className="transform -rotate-90 w-full h-full" viewBox="0 0 180 180">
+          {/* Lean mass (green) - bottom layer */}
+          <circle 
+            cx="90" 
+            cy="90" 
+            r={r} 
+            fill="none" 
+            stroke="#10b981" 
+            strokeWidth="35"
+          />
+          
+          {/* Fat mass (orange) - top layer */}
+          <circle 
+            cx="90" 
+            cy="90" 
+            r={r} 
+            fill="none" 
+            stroke="#f97316" 
+            strokeWidth="35" 
+            strokeDasharray={`${fatStroke} ${c}`}
+            className="transition-all duration-1000"
+          />
         </svg>
+        
         <div className="absolute inset-0 flex items-center justify-center flex-col">
-          <div className="text-5xl font-black text-gray-800">{percentage}%</div>
-          <div className="text-sm text-gray-600 font-semibold mt-1">Body Fat</div>
+          <div className="text-3xl sm:text-4xl md:text-5xl font-black text-gray-800">{percentage}%</div>
+          <div className="text-xs sm:text-sm text-gray-600 font-semibold mt-1">BODY FAT</div>
         </div>
       </div>
     );
@@ -99,36 +120,56 @@ const BodyFatCalculator = ({ onBack, handleBackToHero }) => {
             <p className="text-lg">{result.recommendation}</p>
           </motion.div>
 
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="bg-white rounded-2xl shadow-xl p-6 md:p-8 mb-8">
-            <h3 className="text-2xl font-bold text-gray-800 mb-6 text-center">Body Composition Analysis</h3>
-            <div className="grid md:grid-cols-2 gap-8 items-center">
-              <motion.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} transition={{ type: "spring" }} className="flex flex-col items-center">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="bg-white rounded-2xl shadow-xl p-4 sm:p-6 md:p-8 mb-6 sm:mb-8"
+          >
+            <h3 className="text-xl sm:text-2xl font-bold text-gray-800 mb-4 sm:mb-6 text-center">Body Composition Analysis</h3>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 items-center">
+              {/* Pie Chart */}
+              <motion.div
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.4, type: "spring" }}
+                className="flex flex-col items-center"
+              >
                 <PieChart percentage={result.body_fat_percentage} />
-                <div className="flex items-center justify-center gap-6 mt-6">
+                <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-6 mt-6">
                   <div className="flex items-center gap-2">
                     <div className="w-4 h-4 bg-orange-500 rounded-full"></div>
-                    <span className="text-sm font-semibold">Body Fat ({result.body_fat_percentage}%)</span>
+                    <span className="text-xs sm:text-sm font-semibold">Body Fat ({result.body_fat_percentage}%)</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <div className="w-4 h-4 bg-green-500 rounded-full"></div>
-                    <span className="text-sm font-semibold">Lean ({(100 - parseFloat(result.body_fat_percentage)).toFixed(1)}%)</span>
+                    <span className="text-xs sm:text-sm font-semibold">Lean ({(100 - parseFloat(result.body_fat_percentage)).toFixed(1)}%)</span>
                   </div>
                 </div>
               </motion.div>
 
-              <div className="space-y-4">
+              {/* Stats */}
+              <div className="space-y-3 sm:space-y-4">
                 {[
                   { icon: '⚖️', label: 'Total Weight', value: result.original_unit === 'imperial' ? result.original_weight : result.body_composition.total_weight, unit: result.original_unit === 'imperial' ? 'lbs' : 'kg', bg: 'from-gray-50 to-gray-100', color: 'text-gray-800' },
                   { icon: '🔥', label: 'Fat Mass', value: result.original_unit === 'imperial' ? (parseFloat(result.body_composition.fat_mass) * 2.20462).toFixed(1) : result.body_composition.fat_mass, unit: result.original_unit === 'imperial' ? 'lbs' : 'kg', bg: 'from-orange-50 to-orange-100', color: 'text-orange-600' },
                   { icon: '💚', label: 'Lean Body Mass', value: result.original_unit === 'imperial' ? (parseFloat(result.body_composition.lean_body_mass) * 2.20462).toFixed(1) : result.body_composition.lean_body_mass, unit: result.original_unit === 'imperial' ? 'lbs' : 'kg', bg: 'from-green-50 to-green-100', color: 'text-green-600' },
                   { icon: '🎯', label: 'Category', value: result.category, unit: '', bg: 'from-blue-50 to-blue-100', color: 'text-blue-600' }
                 ].map((item, i) => (
-                  <motion.div key={i} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.1 }} className={`flex items-center justify-between p-4 bg-gradient-to-r ${item.bg} rounded-xl`}>
+                  <motion.div 
+                    key={i} 
+                    initial={{ opacity: 0, x: 20 }} 
+                    animate={{ opacity: 1, x: 0 }} 
+                    transition={{ delay: 0.5 + i * 0.1 }}
+                    whileHover={{ scale: 1.02, boxShadow: '0 8px 16px rgba(0,0,0,0.1)' }}
+                    className={`flex items-center justify-between p-3 sm:p-4 bg-gradient-to-r ${item.bg} rounded-xl cursor-pointer transition-shadow`}
+                  >
                     <div className="flex items-center gap-3">
-                      <div className="text-3xl">{item.icon}</div>
+                      <div className="text-2xl sm:text-3xl">{item.icon}</div>
                       <div>
-                        <div className="text-sm text-gray-600">{item.label}</div>
-                        <div className={`text-2xl font-bold ${item.color}`}>{item.value} {item.unit}</div>
+                        <div className="text-xs sm:text-sm text-gray-600">{item.label}</div>
+                        <div className={`text-lg sm:text-2xl font-bold ${item.color}`}>{item.value} {item.unit}</div>
                       </div>
                     </div>
                   </motion.div>
@@ -181,10 +222,10 @@ const BodyFatCalculator = ({ onBack, handleBackToHero }) => {
 
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-col sm:flex-row gap-4 justify-center">
             <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={() => setShowResults(false)} className="px-8 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white font-semibold rounded-xl shadow-lg">
-              🔄 Calculate Again
+              Calculate Again
             </motion.button>
             <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={() => window.print()} className="px-8 py-3 bg-white text-orange-600 font-semibold rounded-xl border-2 border-orange-500 shadow-lg">
-              🖨️ Print Results
+              Print Results
             </motion.button>
           </motion.div>
         </div>
@@ -254,16 +295,37 @@ const BodyFatCalculator = ({ onBack, handleBackToHero }) => {
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mb-6 p-3 sm:p-4 bg-orange-50 border border-orange-200 rounded-lg">
             <h4 className="font-semibold text-orange-800 mb-2 text-sm sm:text-base">📏 Measurement Tips:</h4>
             <ul className="text-xs sm:text-sm text-orange-700 space-y-1">
-              <li>• <strong>Neck:</strong> Narrowest point below Adam's apple</li>
+              <li>• <strong>Neck:</strong>Narrowest point below Adam's apple</li>
               <li>• <strong>Abdomen:</strong> At navel level</li>
               <li>• <strong>Forearm:</strong> Widest point</li>
               <li>• <strong>Wrist:</strong> Narrowest point</li>
             </ul>
           </motion.div>
 
+<motion.div 
+  initial={{ opacity: 0 }} 
+  animate={{ opacity: 1 }} 
+  className="mb-6 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 border-l-4 border-blue-500 rounded-lg shadow-sm hover:shadow-md transition-all duration-300 group"
+>
+  <div className="flex items-start gap-3">
+    <div className="text-2xl mt-0.5 group-hover:scale-110 transition-transform duration-300">
+      ℹ️
+    </div>
+    <div>
+      <h4 className="font-bold text-blue-900 mb-2 text-sm sm:text-base flex items-center gap-2">
+        Important Note
+      </h4>
+      <p className="text-xs sm:text-sm text-blue-800 leading-relaxed">
+        This calculator provides an <strong>estimated prediction</strong> of body fat percentage using AI-powered Ridge Regression. 
+        Results may vary and should not replace professional medical assessment. This is just to have an idea or estimation of your bodyfat percentge.
+      </p>
+    </div>
+  </div>
+</motion.div>
+
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-col sm:flex-row gap-3 sm:gap-4">
             <motion.button onClick={handleCalculate} disabled={loading} className="w-full sm:flex-1 py-3 sm:py-4 bg-gradient-to-r from-orange-500 to-orange-600 text-white font-bold rounded-xl shadow-lg disabled:opacity-50 text-sm sm:text-base" whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-              {loading ? <div className="flex items-center justify-center"><div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>Calculating...</div> : '🔬 Predict Body Fat'}
+              {loading ? <div className="flex items-center justify-center"><div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>Calculating...</div> : 'Predict Body Fat'}
             </motion.button>
             <motion.button onClick={() => setFormData({ age: '', weight: '', height: '', neck: '', abdomen: '', forearm: '', wrist: '', unit: 'metric' })} className="w-full sm:w-auto px-6 sm:px-8 py-3 sm:py-4 border-2 border-gray-300 text-gray-700 font-semibold rounded-xl hover:border-orange-500 hover:text-orange-600 transition-all text-sm sm:text-base" whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
               Reset

@@ -75,13 +75,14 @@ const CalorieCalculator = ({ onBack }) => {
       const tdee = bmr * activityMultiplier;
       const maintainCalories = Math.round(tdee);
       
-      // Using the formula: Calories = Maintenance ± (1100 × kg per week)
-      const mildWeightLoss = Math.round(maintainCalories - (1100 * 0.25));
-      const weightLoss = Math.round(maintainCalories - (1100 * 0.5));
-      const extremeWeightLoss = Math.round(maintainCalories - (1100 * 1));
-      const mildWeightGain = Math.round(maintainCalories + (1100 * 0.25));
-      const weightGain = Math.round(maintainCalories + (1100 * 0.5));
-      const extremeWeightGain = Math.round(maintainCalories + (1100 * 1));
+      // CORRECTED: Using 7700 calories ≈ 1 kg body weight
+      // Daily calorie adjustment = (7700 × kg per week) / 7 days
+      const mildWeightLoss = Math.round(maintainCalories - (7700 * 0.25 / 7));      // -275 cal
+      const weightLoss = Math.round(maintainCalories - (7700 * 0.5 / 7));           // -550 cal
+      const extremeWeightLoss = Math.round(maintainCalories - (7700 * 1.0 / 7));    // -1100 cal
+      const mildWeightGain = Math.round(maintainCalories + (7700 * 0.25 / 7));      // +275 cal
+      const weightGain = Math.round(maintainCalories + (7700 * 0.5 / 7));           // +550 cal
+      const extremeWeightGain = Math.round(maintainCalories + (7700 * 1.0 / 7));    // +1100 cal
 
       const heightM = height / 100;
       const bmi = weight / (heightM * heightM);
@@ -127,6 +128,75 @@ const CalorieCalculator = ({ onBack }) => {
     }, 1000);
   };
 
+  const calculateMacros = (calories, goalType = 'maintain') => {
+    const weight = parseFloat(formData.weight);
+    
+    // SCIENCE-BASED MACRO CALCULATIONS
+    let proteinGrams, fatGrams, carbGrams;
+    
+    if (goalType.includes('Loss') || goalType.includes('loss')) {
+      // CUTTING: Higher protein to preserve muscle
+      proteinGrams = Math.round(weight * 2.4);  // 2.4g/kg during deficit
+      const proteinCals = proteinGrams * 4;
+      
+      // Fat: 25% of calories
+      const fatCals = Math.round(calories * 0.25);
+      fatGrams = Math.round(fatCals / 9);
+      
+      // Carbs: Remaining
+      const carbCals = calories - proteinCals - fatCals;
+      carbGrams = Math.round(carbCals / 4);
+      
+    } else if (goalType.includes('Gain') || goalType.includes('gain')) {
+      // BULKING: Moderate protein, high carbs
+      proteinGrams = Math.round(weight * 2.2);  // 2.2g/kg during surplus
+      const proteinCals = proteinGrams * 4;
+      
+      // Fat: 25% of calories
+      const fatCals = Math.round(calories * 0.25);
+      fatGrams = Math.round(fatCals / 9);
+      
+      // Carbs: Remaining (will be high for energy)
+      const carbCals = calories - proteinCals - fatCals;
+      carbGrams = Math.round(carbCals / 4);
+      
+    } else {
+      // MAINTENANCE
+      proteinGrams = Math.round(weight * 2.2);  // 2.2g/kg
+      const proteinCals = proteinGrams * 4;
+      
+      // Fat: 25% of calories
+      const fatCals = Math.round(calories * 0.25);
+      fatGrams = Math.round(fatCals / 9);
+      
+      // Carbs: Remaining
+      const carbCals = calories - proteinCals - fatCals;
+      carbGrams = Math.round(carbCals / 4);
+    }
+    
+    const proteinCals = proteinGrams * 4;
+    const fatCals = fatGrams * 9;
+    const carbCals = carbGrams * 4;
+    
+    return {
+      protein: { 
+        grams: proteinGrams, 
+        calories: proteinCals, 
+        percentage: Math.round((proteinCals / calories) * 100) 
+      },
+      carbs: { 
+        grams: carbGrams, 
+        calories: carbCals, 
+        percentage: Math.round((carbCals / calories) * 100) 
+      },
+      fat: { 
+        grams: fatGrams, 
+        calories: fatCals, 
+        percentage: Math.round((fatCals / calories) * 100) 
+      }
+    };
+  };
+
   const resetCalculator = () => {
     setFormData({
       age: '',
@@ -138,18 +208,6 @@ const CalorieCalculator = ({ onBack }) => {
     setResult(null);
     setSelectedGoal('maintain');
     setExpandedSection(null);
-  };
-
-  const calculateMacros = (calories) => {
-    const proteinCals = Math.round(calories * 0.25);
-    const carbCals = Math.round(calories * 0.45);
-    const fatCals = Math.round(calories * 0.30);
-
-    return {
-      protein: { grams: Math.round(proteinCals / 4), calories: proteinCals, percentage: 25 },
-      carbs: { grams: Math.round(carbCals / 4), calories: carbCals, percentage: 45 },
-      fat: { grams: Math.round(fatCals / 9), calories: fatCals, percentage: 30 }
-    };
   };
 
   const goalCards = result ? [
@@ -267,7 +325,10 @@ const CalorieCalculator = ({ onBack }) => {
   );
 
   if (result) {
-    const selectedMacros = calculateMacros(result.goals[selectedGoal]);
+    const selectedMacros = calculateMacros(
+      result.goals[selectedGoal], 
+      goalCards.find(g => g.id === selectedGoal)?.title
+    );
 
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-50 to-orange-50 pt-20">
@@ -494,100 +555,234 @@ const CalorieCalculator = ({ onBack }) => {
 
             {/* Expanded Content */}
             <AnimatePresence>
-              {expandedSection === 'bmr' && (
-                <motion.div
-                  initial={{ height: 0, opacity: 0 }}
-                  animate={{ height: 'auto', opacity: 1 }}
-                  exit={{ height: 0, opacity: 0 }}
-                  transition={{ duration: 0.3 }}
-                  className="overflow-hidden mb-6"
-                >
-                  <div className="bg-white rounded-2xl shadow-lg p-6 md:p-8 border-2 border-orange-100">
-                    <h4 className="text-xl font-bold text-gray-800 mb-4">Understanding Your Basal Metabolic Rate (BMR)</h4>
-                    <div className="text-gray-700 leading-relaxed space-y-4">
-                      <p>
-                        Your <strong>Basal Metabolic Rate (BMR)</strong> is the number of calories your body needs <strong>at complete rest</strong> to maintain vital functions like breathing, circulation, and cell repair. It's essentially the <strong>minimum energy your body burns daily</strong>.
-                      </p>
-                      <p>
-                        The <strong>Mifflin–St Jeor Equation</strong> (1990) is a widely accepted and research-backed formula for estimating BMR. Studies have shown it to be one of the most accurate methods for healthy adults. It calculates your resting energy expenditure based on your <strong>weight, height, age, and sex</strong>:
-                      </p>
-                      <div className="bg-orange-50 p-4 rounded-lg border border-orange-200">
-                        <p className="font-semibold mb-2 text-orange-800">For Men:</p>
-                        <p className="font-mono text-sm mb-4">BMR = 10 × weight (kg) + 6.25 × height (cm) − 5 × age (years) + 5</p>
-                        <p className="font-semibold mb-2 text-orange-800">For Women:</p>
-                        <p className="font-mono text-sm">BMR = 10 × weight (kg) + 6.25 × height (cm) − 5 × age (years) − 161</p>
-                      </div>
-                      <p>
-                        Once you know your BMR, you multiply it by an <strong>Activity Factor</strong> to estimate your <strong>total daily maintenance calories</strong>, which accounts for physical activity:
-                      </p>
-                      <ul className="space-y-1 ml-6 text-gray-700">
-                        <li>• Sedentary: × 1.2</li>
-                        <li>• Lightly active: × 1.375</li>
-                        <li>• Moderately active: × 1.55</li>
-                        <li>• Very active: × 1.725</li>
-                        <li>• Extra active: × 1.9</li>
-                      </ul>
-                    </div>
-                  </div>
-                </motion.div>
-              )}
+           {expandedSection === 'science' && (
+  <motion.div
+    initial={{ height: 0, opacity: 0 }}
+    animate={{ height: 'auto', opacity: 1 }}
+    exit={{ height: 0, opacity: 0 }}
+    transition={{ duration: 0.3 }}
+    className="overflow-hidden mb-6"
+  >
+    <div className="bg-white rounded-2xl shadow-lg p-6 md:p-8 border-2 border-blue-100">
+      <h4 className="text-xl font-bold text-gray-800 mb-4">The Science Behind Weight Loss & Gain</h4>
+      <div className="text-gray-700 leading-relaxed space-y-4">
+        
+        {/* Calorie Calculations */}
+        <div>
+          <h5 className="font-bold text-lg text-blue-800 mb-3">📊 Calorie Calculations</h5>
+          <p>
+            Macromate's calorie recommendations are based on well-established nutritional science. According to research published in the <strong>American Journal of Clinical Nutrition</strong> (Hall et al., 2012), approximately <strong>7,700 calories correspond to 1 kilogram of body weight</strong>. This is because 1 kg of body fat contains roughly 7,700 calories of stored energy.
+          </p>
+          <div className="bg-blue-50 p-4 rounded-lg border border-blue-200 my-4">
+            <p className="font-semibold mb-2 text-blue-800">Daily Calorie Adjustment Formula:</p>
+            <p className="font-mono text-sm mb-3">Calories/day = Maintenance ± (7700 × kg per week) / 7 days</p>
+            <div className="text-sm space-y-1 mt-3">
+              <p>• <strong>0.25 kg/week</strong> → ±275 calories/day (mild, sustainable)</p>
+              <p>• <strong>0.5 kg/week</strong> → ±550 calories/day (moderate, optimal)</p>
+              <p>• <strong>1.0 kg/week</strong> → ±1100 calories/day (aggressive)</p>
+            </div>
+          </div>
+        </div>
 
-              {expandedSection === 'maintenance' && (
-                <motion.div
-                  initial={{ height: 0, opacity: 0 }}
-                  animate={{ height: 'auto', opacity: 1 }}
-                  exit={{ height: 0, opacity: 0 }}
-                  transition={{ duration: 0.3 }}
-                  className="overflow-hidden mb-6"
-                >
-                  <div className="bg-white rounded-2xl shadow-lg p-6 md:p-8 border-2 border-green-100">
-                    <h4 className="text-xl font-bold text-gray-800 mb-4">How Maintenance Calories Are Calculated</h4>
-                    <div className="text-gray-700 leading-relaxed space-y-4">
-                      <p>
-                        Macromate calculates your maintenance calories — the number of calories your body needs to maintain its current weight — using principles from metabolic research and energy balance studies. According to findings published in the American Journal of Clinical Nutrition (Hall et al., 2012) and the Journal of the Academy of Nutrition and Dietetics (Dhurandhar et al., 2015), your body maintains weight when calorie intake equals calorie expenditure through metabolism, activity, and digestion.
-                      </p>
-                      <div className="bg-green-50 p-4 rounded-lg border border-green-200">
-                        <p className="font-semibold mb-2 text-green-800">For Maintenance:</p>
-                        <p className="font-mono text-sm mb-3">Calories/day = Basal Metabolic Rate (BMR) × Activity Factor</p>
-                        <p className="text-sm font-semibold text-green-700">
-                          Your calculation: {result.bmr} × {result.activityMultiplier} = {result.tdee} calories/day
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                </motion.div>
-              )}
+        {/* Protein Calculations */}
+        <div className="border-t pt-4">
+          <h5 className="font-bold text-lg text-blue-800 mb-3">🥩 Protein Requirements</h5>
+          <p className="mb-3">
+            Protein needs vary based on your goal. Research from the <strong>International Society of Sports Nutrition</strong> (Jäger et al., 2017) and meta-analyses by Morton et al. (2018) provide clear guidelines:
+          </p>
+          
+          <div className="space-y-3">
+            <div className="bg-red-50 p-3 rounded-lg border border-red-200">
+              <p className="font-semibold text-red-800 mb-1">🔻 During Weight Loss (Cutting):</p>
+              <p className="font-mono text-sm mb-2">Protein = 2.4g per kg body weight</p>
+              <p className="text-sm">Higher protein intake preserves lean muscle mass during a caloric deficit and increases satiety. Studies show that protein needs increase by 15-25% when cutting to prevent muscle loss.</p>
+            </div>
 
-              {expandedSection === 'science' && (
-                <motion.div
-                  initial={{ height: 0, opacity: 0 }}
-                  animate={{ height: 'auto', opacity: 1 }}
-                  exit={{ height: 0, opacity: 0 }}
-                  transition={{ duration: 0.3 }}
-                  className="overflow-hidden mb-6"
-                >
-                  <div className="bg-white rounded-2xl shadow-lg p-6 md:p-8 border-2 border-blue-100">
-                    <h4 className="text-xl font-bold text-gray-800 mb-4">The Science Behind Weight Loss & Gain</h4>
-                    <div className="text-gray-700 leading-relaxed space-y-4">
-                      <p>
-                        Macromate's calorie recommendations are based on well-established nutritional science. According to research published in the American Journal of Clinical Nutrition (Hall et al., 2012), approximately 7,700 calories correspond to 1 kilogram of body weight. Using this principle, your daily calorie needs are calculated through a simple, science-backed approach — by adding calories to promote weight gain or reducing calories to support fat loss.
-                      </p>
-                      <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
-                        <p className="font-semibold mb-2 text-blue-800">For Weight Gain:</p>
-                        <p className="font-mono text-sm mb-4">Calories/day = Maintenance Calories + (1100 × Target Weight Gain in kg per week)</p>
-                        <p className="font-semibold mb-2 text-blue-800">For Weight Loss:</p>
-                        <p className="font-mono text-sm">Calories/day = Maintenance Calories − (1100 × Target Weight Loss in kg per week)</p>
-                      </div>
-                      <p>
-                        These formulas align with recommendations from the American College of Sports Medicine (ACSM) and the Centers for Disease Control and Prevention (CDC) for safe, sustainable progress. Whether your goal is to build lean muscle or lose fat gradually, Macromate helps you apply these research-backed numbers for real, lasting results. 💪
-                      </p>
-                      <p className="text-sm text-gray-600">
-                        Source: <a href="https://academic.oup.com/ajcn/article/95/3/589/4576812" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline font-medium">American Journal of Clinical Nutrition</a>
-                      </p>
-                    </div>
-                  </div>
-                </motion.div>
-              )}
+            <div className="bg-green-50 p-3 rounded-lg border border-green-200">
+              <p className="font-semibold text-green-800 mb-1">⚖️ During Maintenance:</p>
+              <p className="font-mono text-sm mb-2">Protein = 2.2g per kg body weight</p>
+              <p className="text-sm">Optimal for maintaining muscle mass and supporting recovery. This aligns with ISSN recommendations for active individuals.</p>
+            </div>
+
+            <div className="bg-blue-50 p-3 rounded-lg border border-blue-200">
+              <p className="font-semibold text-blue-800 mb-1">🔺 During Weight Gain (Bulking):</p>
+              <p className="font-mono text-sm mb-2">Protein = 2.2g per kg body weight</p>
+              <p className="text-sm">Sufficient for muscle protein synthesis during a surplus. The anabolic effect of extra calories is protein-sparing, so you don't need excessive protein when bulking.</p>
+            </div>
+          </div>
+          
+          <p className="text-xs text-gray-600 mt-3">
+            <strong>Why body-weight based?</strong> Protein requirements scale with lean body mass. Heavier individuals need more absolute protein, but the ratio remains consistent (2.2-2.4g/kg).
+          </p>
+        </div>
+
+        {/* Fat Calculations */}
+        <div className="border-t pt-4">
+          <h5 className="font-bold text-lg text-blue-800 mb-3">🥑 Fat Requirements</h5>
+          <div className="bg-yellow-50 p-4 rounded-lg border border-yellow-200">
+            <p className="font-semibold text-yellow-800 mb-2">Fixed at 25% of Total Calories</p>
+            <p className="text-sm mb-3">
+              Regardless of your goal, dietary fat should comprise <strong>20-30% of total calories</strong> according to the <strong>Academy of Nutrition and Dietetics</strong>. We use 25% as the optimal middle ground.
+            </p>
+            <div className="text-sm space-y-2">
+              <p><strong>Why this matters:</strong></p>
+              <ul className="list-disc ml-5 space-y-1">
+                <li>Essential for hormone production (testosterone, estrogen, cortisol)</li>
+                <li>Required for absorption of fat-soluble vitamins (A, D, E, K)</li>
+                <li>Supports cell membrane integrity and brain function</li>
+                <li>Minimum of 0.5-1.0g/kg needed for hormonal health</li>
+              </ul>
+            </div>
+          </div>
+          <p className="text-xs text-gray-600 mt-3">
+            <strong>Note:</strong> Going below 15% fat can disrupt hormone production, while exceeding 35% leaves less room for protein and carbs needed for performance.
+          </p>
+        </div>
+
+        {/* Carbohydrate Calculations */}
+        <div className="border-t pt-4">
+          <h5 className="font-bold text-lg text-blue-800 mb-3">🍞 Carbohydrate Allocation</h5>
+          <div className="bg-purple-50 p-4 rounded-lg border border-purple-200">
+            <p className="font-semibold text-purple-800 mb-2">Fills Remaining Calories</p>
+            <p className="font-mono text-sm mb-3">Carbs = (Total Calories - Protein Calories - Fat Calories) / 4</p>
+            <p className="text-sm mb-3">
+              After determining protein (based on body weight and goal) and fat (25% of calories), <strong>carbohydrates fill the remaining caloric needs</strong>. This approach is supported by research on flexible dieting and energy balance.
+            </p>
+            <div className="text-sm space-y-2">
+              <p><strong>Why this approach works:</strong></p>
+              <ul className="list-disc ml-5 space-y-1">
+                <li><strong>During Weight Loss:</strong> Lower carbs naturally (due to lower total calories), which aids fat mobilization</li>
+                <li><strong>During Maintenance:</strong> Moderate carbs support training and recovery</li>
+                <li><strong>During Weight Gain:</strong> Higher carbs (often 55-65% of calories) fuel intense training and support the anabolic environment</li>
+              </ul>
+            </div>
+          </div>
+          <p className="text-xs text-gray-600 mt-3">
+            <strong>Performance Note:</strong> Carbs are protein-sparing and the primary fuel for high-intensity exercise. Higher carb intake during a surplus maximizes training performance and muscle glycogen stores.
+          </p>
+        </div>
+
+        {/* Example Calculation */}
+        <div className="border-t pt-4">
+          <h5 className="font-bold text-lg text-blue-800 mb-3">🧮 Example: Your Current Goal</h5>
+          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 rounded-lg border-2 border-blue-200">
+            <p className="font-semibold text-gray-800 mb-3">
+              Selected Goal: <span className="text-orange-600">{goalCards.find(g => g.id === selectedGoal)?.title}</span>
+            </p>
+            <div className="space-y-2 text-sm">
+              <div className="flex justify-between">
+                <span>Target Calories:</span>
+                <span className="font-semibold">{result.goals[selectedGoal]} cal/day</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Body Weight:</span>
+                <span className="font-semibold">{result.userInfo.weight} kg</span>
+              </div>
+              <div className="flex justify-between border-t pt-2 mt-2">
+                <span>Protein (2.2-2.4g/kg):</span>
+                <span className="font-semibold">{calculateMacros(result.goals[selectedGoal], goalCards.find(g => g.id === selectedGoal)?.title).protein.grams}g ({calculateMacros(result.goals[selectedGoal], goalCards.find(g => g.id === selectedGoal)?.title).protein.percentage}%)</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Fat (25% of calories):</span>
+                <span className="font-semibold">{calculateMacros(result.goals[selectedGoal], goalCards.find(g => g.id === selectedGoal)?.title).fat.grams}g ({calculateMacros(result.goals[selectedGoal], goalCards.find(g => g.id === selectedGoal)?.title).fat.percentage}%)</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Carbs (remaining):</span>
+                <span className="font-semibold">{calculateMacros(result.goals[selectedGoal], goalCards.find(g => g.id === selectedGoal)?.title).carbs.grams}g ({calculateMacros(result.goals[selectedGoal], goalCards.find(g => g.id === selectedGoal)?.title).carbs.percentage}%)</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Scientific References */}
+        <div className="border-t pt-4">
+          <h5 className="font-bold text-lg text-blue-800 mb-3">📚 Scientific References</h5>
+          <div className="text-xs text-gray-600 space-y-3">
+            <p>
+              • Hall, K. D., et al. (2012). "Energy balance and its components: implications for body weight regulation." <em>American Journal of Clinical Nutrition</em>, 95(4), 989-994. 
+              <a 
+                href="https://academic.oup.com/ajcn/article/95/4/989/4578369" 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                className="text-blue-600 hover:text-blue-800 hover:underline font-medium ml-1"
+              >
+                [Read Paper →]
+              </a>
+            </p>
+            <p>
+              • Morton, R. W., et al. (2018). "A systematic review, meta-analysis and meta-regression of the effect of protein supplementation on resistance training-induced gains in muscle mass and strength in healthy adults." <em>British Journal of Sports Medicine</em>, 52(6), 376-384. 
+              <a 
+                href="https://bjsm.bmj.com/content/52/6/376" 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                className="text-blue-600 hover:text-blue-800 hover:underline font-medium ml-1"
+              >
+                [Read Paper →]
+              </a>
+            </p>
+            <p>
+              • Jäger, R., et al. (2017). "International Society of Sports Nutrition Position Stand: protein and exercise." <em>Journal of the International Society of Sports Nutrition</em>, 14(20). 
+              <a 
+                href="https://jissn.biomedcentral.com/articles/10.1186/s12970-017-0177-8" 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                className="text-blue-600 hover:text-blue-800 hover:underline font-medium ml-1"
+              >
+                [Read Paper →]
+              </a>
+            </p>
+            <p>
+              • Helms, E. R., et al. (2014). "Evidence-based recommendations for natural bodybuilding contest preparation: nutrition and supplementation." <em>Journal of the International Society of Sports Nutrition</em>, 11(1), 20. 
+              <a 
+                href="https://jissn.biomedcentral.com/articles/10.1186/1550-2783-11-20" 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                className="text-blue-600 hover:text-blue-800 hover:underline font-medium ml-1"
+              >
+                [Read Paper →]
+              </a>
+            </p>
+            <p>
+              • Aragon, A. A., et al. (2017). "International Society of Sports Nutrition position stand: diets and body composition." <em>Journal of the International Society of Sports Nutrition</em>, 14(1), 16. 
+              <a 
+                href="https://jissn.biomedcentral.com/articles/10.1186/s12970-017-0174-y" 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                className="text-blue-600 hover:text-blue-800 hover:underline font-medium ml-1"
+              >
+                [Read Paper →]
+              </a>
+            </p>
+            <p>
+              • Phillips, S. M., & Van Loon, L. J. (2011). "Dietary protein for athletes: from requirements to optimum adaptation." <em>Journal of Sports Sciences</em>, 29(sup1), S29-S38. 
+              <a 
+                href="https://www.tandfonline.com/doi/full/10.1080/02640414.2011.619204" 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                className="text-blue-600 hover:text-blue-800 hover:underline font-medium ml-1"
+              >
+                [Read Paper →]
+              </a>
+            </p>
+          </div>
+          <div className="mt-4 p-3 bg-gray-50 rounded-lg border border-gray-200">
+            <p className="text-xs text-gray-700">
+              <strong>💡 Note:</strong> All research papers are peer-reviewed and published in reputable scientific journals. Click on any link to read the full study and dive deeper into the methodology and findings.
+            </p>
+          </div>
+        </div>
+
+        {/* Bottom CTA */}
+        <div className="bg-gradient-to-r from-orange-50 to-red-50 p-4 rounded-lg border-2 border-orange-200 mt-4">
+          <p className="text-sm font-semibold text-orange-800 text-center">
+            💪 These calculations are personalized to YOUR body weight and goals, ensuring optimal results based on current sports nutrition science!
+          </p>
+        </div>
+
+      </div>
+    </div>
+  </motion.div>
+)}
             </AnimatePresence>
           </motion.div>
         </div>
@@ -766,5 +961,4 @@ const CalorieCalculator = ({ onBack }) => {
     </div>
   );
 };
-
 export default CalorieCalculator;

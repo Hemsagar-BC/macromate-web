@@ -226,7 +226,7 @@ def calculate_bmi():
 
 @app.route('/api/calculate/calories', methods=['POST'])
 def calculate_calories():
-    """Calorie Calculator endpoint"""
+    """Calorie Calculator endpoint - Science-based calculations"""
     try:
         data = request.json
         height = float(data.get('height'))  # in cm
@@ -255,13 +255,15 @@ def calculate_calories():
         # Calculate TDEE (Total Daily Energy Expenditure)
         tdee = bmr * activity_multiplier
         
-        # Calculate different calorie goals
+        # CORRECTED: Using 7700 calories ≈ 1 kg body weight (scientific consensus)
+        # Formula: Calorie adjustment = (7700 cal/kg) × (kg per week) ÷ 7 days
         maintain_calories = round(tdee)
-        mild_weight_loss = round(tdee - 250)    # 0.25 kg/week
-        weight_loss = round(tdee - 500)         # 0.5 kg/week  
-        extreme_weight_loss = round(tdee - 750) # 0.75 kg/week
-        weight_gain = round(tdee + 300)         # lean muscle gain
-        fast_weight_gain = round(tdee + 500)    # faster weight gain
+        mild_weight_loss = round(tdee - (7700 * 0.25 / 7))      # -275 cal/day = 0.25 kg/week
+        weight_loss = round(tdee - (7700 * 0.5 / 7))            # -550 cal/day = 0.5 kg/week  
+        extreme_weight_loss = round(tdee - (7700 * 1.0 / 7))    # -1100 cal/day = 1 kg/week
+        mild_weight_gain = round(tdee + (7700 * 0.25 / 7))      # +275 cal/day = 0.25 kg/week
+        weight_gain = round(tdee + (7700 * 0.5 / 7))            # +550 cal/day = 0.5 kg/week
+        extreme_weight_gain = round(tdee + (7700 * 1.0 / 7))    # +1100 cal/day = 1 kg/week
         
         # Calculate BMI for recommendation
         height_m = height / 100
@@ -278,19 +280,23 @@ def calculate_calories():
             recommendation = "You probably need to lose weight. Consider creating a moderate calorie deficit combined with regular physical activity."
             recommendation_color = "text-orange-600 bg-orange-50 border-orange-200"
         
-        # Calculate recommended macros (for maintenance calories)
-        protein_percentage = 25  # 25% protein
-        carb_percentage = 45     # 45% carbs
-        fat_percentage = 30      # 30% fat
+        # CORRECTED MACRO CALCULATIONS - Body-weight based
+        # Protein: 2.2g/kg for maintenance (scientifically optimal)
+        protein_grams_maintain = round(weight * 2.2)
+        protein_calories_maintain = protein_grams_maintain * 4
         
-        protein_calories = round(maintain_calories * (protein_percentage / 100))
-        carb_calories = round(maintain_calories * (carb_percentage / 100))
-        fat_calories = round(maintain_calories * (fat_percentage / 100))
+        # Fat: 25% of calories for hormonal health
+        fat_calories_maintain = round(maintain_calories * 0.25)
+        fat_grams_maintain = round(fat_calories_maintain / 9)
         
-        # Convert calories to grams (protein: 4 cal/g, carbs: 4 cal/g, fat: 9 cal/g)
-        protein_grams = round(protein_calories / 4)
-        carb_grams = round(carb_calories / 4)
-        fat_grams = round(fat_calories / 9)
+        # Carbs: Remaining calories
+        carb_calories_maintain = maintain_calories - protein_calories_maintain - fat_calories_maintain
+        carb_grams_maintain = round(carb_calories_maintain / 4)
+        
+        # Calculate percentages
+        protein_percentage = round((protein_calories_maintain / maintain_calories) * 100)
+        fat_percentage = 25
+        carb_percentage = 100 - protein_percentage - fat_percentage
         
         result = {
             'bmr': round(bmr),
@@ -302,25 +308,26 @@ def calculate_calories():
                 'mild_loss': mild_weight_loss,
                 'weight_loss': weight_loss,
                 'extreme_loss': extreme_weight_loss,
+                'mild_gain': mild_weight_gain,
                 'weight_gain': weight_gain,
-                'fast_gain': fast_weight_gain
+                'extreme_gain': extreme_weight_gain
             },
             'recommendation': recommendation,
             'recommendation_color': recommendation_color,
             'macros': {
                 'protein': {
-                    'grams': protein_grams,
-                    'calories': protein_calories,
+                    'grams': protein_grams_maintain,
+                    'calories': protein_calories_maintain,
                     'percentage': protein_percentage
                 },
                 'carbs': {
-                    'grams': carb_grams,
-                    'calories': carb_calories,
+                    'grams': carb_grams_maintain,
+                    'calories': carb_calories_maintain,
                     'percentage': carb_percentage
                 },
                 'fat': {
-                    'grams': fat_grams,
-                    'calories': fat_calories,
+                    'grams': fat_grams_maintain,
+                    'calories': fat_calories_maintain,
                     'percentage': fat_percentage
                 }
             },
@@ -332,88 +339,12 @@ def calculate_calories():
                 'bmi': round(bmi, 1)
             },
             'weekly_weight_changes': {
-                'mild_loss': -0.25,     # kg per week
+                'mild_loss': -0.25,
                 'weight_loss': -0.5,
-                'extreme_loss': -0.75,
-                'weight_gain': 0.25,
-                'fast_gain': 0.5
-            },
-            'calculation_date': datetime.now().isoformat()
-        }
-        
-        return jsonify({
-            'success': True,
-            'data': result
-        })
-        
-    except Exception as e:
-        return jsonify({
-            'success': False,
-            'error': str(e)
-        }), 400
-
-
-# ============================================
-# MACRO CALCULATOR ENDPOINT
-# ============================================
-
-@app.route('/api/calculate/macros', methods=['POST'])
-def calculate_macros():
-    """Macro Calculator endpoint"""
-    try:
-        data = request.json
-        calories = float(data.get('calories'))
-        goal = data.get('goal', 'maintain').lower()
-        diet_type = data.get('diet_type', 'balanced').lower()
-        
-        # Different macro distributions based on goal and diet type
-        if diet_type == 'high_protein':
-            protein_pct, carb_pct, fat_pct = 35, 35, 30
-        elif diet_type == 'low_carb':
-            protein_pct, carb_pct, fat_pct = 30, 20, 50
-        elif diet_type == 'high_carb':
-            protein_pct, carb_pct, fat_pct = 20, 60, 20
-        else:  # balanced
-            protein_pct, carb_pct, fat_pct = 25, 45, 30
-        
-        # Adjust based on goal
-        if goal in ['lose_weight', 'cut']:
-            protein_pct += 5  # Higher protein for muscle preservation
-            carb_pct -= 5
-        elif goal in ['gain_weight', 'bulk']:
-            carb_pct += 5  # Higher carbs for energy
-            protein_pct -= 5
-        
-        # Calculate macro calories
-        protein_calories = round(calories * (protein_pct / 100))
-        carb_calories = round(calories * (carb_pct / 100))
-        fat_calories = round(calories * (fat_pct / 100))
-        
-        # Convert to grams
-        protein_grams = round(protein_calories / 4)
-        carb_grams = round(carb_calories / 4)
-        fat_grams = round(fat_calories / 9)
-        
-        result = {
-            'total_calories': calories,
-            'goal': goal,
-            'diet_type': diet_type,
-            'macros': {
-                'protein': {
-                    'grams': protein_grams,
-                    'calories': protein_calories,
-                    'percentage': protein_pct
-                },
-                'carbohydrates': {
-                    'grams': carb_grams,
-                    'calories': carb_calories,
-                    'percentage': carb_pct
-                },
-                'fat': {
-                    'grams': fat_grams,
-                    'calories': fat_calories,
-                    'percentage': fat_pct
-                }
+                'extreme_loss': -1.0,
+                'mild_gain': 0.25,
+                'weight_gain': 0.5,
+                'extreme_gain': 1.0
             },
             'calculation_date': datetime.now().isoformat()
         }
@@ -585,4 +516,5 @@ if __name__ == '__main__':
     print("\nServer running on http://localhost:5000")
     print("="*70 + "\n")
     
-    app.run(debug=True)
+    if __name__ == '__main__':
+      app.run(debug=False, host='0.0.0.0', port=5000)
