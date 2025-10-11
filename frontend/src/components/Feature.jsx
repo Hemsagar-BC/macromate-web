@@ -2,7 +2,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { featuresData } from '../constants';
-import image from "../assets/noyes.png"
+import image from "../assets/Geminipic.png"
 
 const Features = () => {
   const containerVariants = {

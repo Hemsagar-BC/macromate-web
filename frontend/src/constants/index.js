@@ -118,12 +118,13 @@ export const calculateCards = [
     features: ["TDEE Calculation", "Goal-based Planning", "Macro Breakdown"]
   },
   {
-    id: "macros",
-    title: "Macro Calculator",
-    description: "Optimize your protein, carbs, and fat intake for better results",
-    icon: "⚖️",
+    id: "bodyfat",  // CHANGED FROM "macros"
+    title: "Body Fat Predictor",  // CHANGED
+    description: "Predict your body fat percentage using AI-powered analysis",  // CHANGED
+    icon: "💪",  // CHANGED
     color: "from-orange-300 to-orange-500",
-    features: ["Protein Requirements", "Carb Cycling", "Fat Distribution"]
+    features: ["AI Prediction Model", "Body Composition", "Health Assessment"]  // CHANGED
+  
   }
 ];
 

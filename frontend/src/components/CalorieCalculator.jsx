@@ -434,7 +434,7 @@ const CalorieCalculator = ({ onBack }) => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 1.2 }}
           >
-            <h3 className="text-2xl font-bold text-gray-800 mb-6 text-center">📚 Understanding The Science</h3>
+            <h3 className="text-2xl font-bold text-gray-800 mb-6 text-center">📚 Science behind these numbers</h3>
             
             <div className="grid md:grid-cols-3 gap-6 mb-8">
               {/* BMR Card */}

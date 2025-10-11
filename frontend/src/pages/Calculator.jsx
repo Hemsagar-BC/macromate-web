@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { calculateCards } from '../constants';
 import BMICalculator from '../components/BMICalculator';
 import CalorieCalculator from '../components/CalorieCalculator';
-
+import BodyFatCalculator from '../components/BodyFatCalculator';
 // Particle Background Component
 const ParticleBackground = () => {
   const [particles, setParticles] = useState([]);
@@ -129,50 +129,9 @@ const Calculate = ({ navigateToPage }) => {
     return <CalorieCalculator onBack={handleBackToCalculators} handleBackToHero={handleBackToHero} />;
   }
 
-  if (activeCalculator === 'macros') {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-orange-50 pt-20 relative overflow-hidden">
-        <ParticleBackground />
-        <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-12 relative z-10">
-          <div className="flex items-center justify-between mb-8">
-            <button 
-              onClick={handleBackToCalculators}
-              className="flex items-center text-gray-600 hover:text-orange-600 transition-colors duration-200"
-            >
-              <svg className="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-              </svg>
-              Back to Calculators
-            </button>
-            <button 
-              onClick={handleBackToHero}
-              className="flex items-center text-gray-600 hover:text-orange-600 transition-colors duration-200"
-            >
-              <svg className="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-              </svg>
-              Home
-            </button>
-          </div>
-
-          <div className="bg-white rounded-2xl shadow-xl p-8 text-center">
-            <div className="text-6xl mb-4">⚖️</div>
-            <h2 className="text-2xl font-bold text-gray-800 mb-4">Macro Calculator</h2>
-            <p className="text-gray-600 mb-6">
-              The macro calculator is coming soon! For now, you can see macro recommendations in the calorie calculator results.
-            </p>
-            <button
-              onClick={() => setActiveCalculator('calories')}
-              className="px-8 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white font-semibold rounded-xl hover:from-orange-600 hover:to-orange-700 transition-all duration-300 shadow-lg hover:shadow-xl"
-            >
-              Try Calorie Calculator
-            </button>
-          </div>
-        </div>
-      </div>
-    );
+  if (activeCalculator === 'bodyfat') {
+    return <BodyFatCalculator onBack={handleBackToCalculators} handleBackToHero={handleBackToHero} />;
   }
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-orange-50 relative overflow-hidden">
       <ParticleBackground />

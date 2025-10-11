@@ -429,31 +429,142 @@ def calculate_macros():
             'error': str(e)
         }), 400
 
-
 # ============================================
-# ERROR HANDLERS
+# BODY FAT PREDICTOR ENDPOINT
 # ============================================
 
-@app.errorhandler(404)
-def not_found_error(error):
-    return jsonify({
-        'success': False,
-        'error': 'Endpoint not found'
-    }), 404
-
-@app.errorhandler(500)
-def internal_error(error):
-    return jsonify({
-        'success': False,
-        'error': 'Internal server error'
-    }), 500
-
-@app.errorhandler(400)
-def bad_request_error(error):
-    return jsonify({
-        'success': False,
-        'error': 'Bad request - please check your input data'
-    }), 400
+@app.route('/api/calculate/bodyfat', methods=['POST'])
+def calculate_bodyfat():
+    """Body Fat Predictor endpoint using Ridge Regression model"""
+    try:
+        import pickle
+        import numpy as np
+        
+        # Load the trained model
+        try:
+            with open('bodyfat.pkl', 'rb') as file:
+                model = pickle.load(file)
+        except FileNotFoundError:
+            return jsonify({
+                'success': False,
+                'error': 'Model file not found. Please ensure bodyfat.pkl is in the server directory.'
+            }), 500
+        
+        data = request.json
+        
+        # Extract features
+        age = float(data.get('age'))
+        weight = float(data.get('weight'))
+        height = float(data.get('height'))
+        neck = float(data.get('neck'))
+        abdomen = float(data.get('abdomen'))
+        forearm = float(data.get('forearm'))
+        wrist = float(data.get('wrist'))
+        unit = data.get('unit', 'metric')
+        
+        # Store original values for display
+        original_weight = weight
+        
+        # Convert to metric if needed (model expects metric)
+        if unit == 'imperial':
+            weight = weight * 0.453592  # pounds to kg
+            height = height * 2.54      # inches to cm
+            neck = neck * 2.54
+            abdomen = abdomen * 2.54
+            forearm = forearm * 2.54
+            wrist = wrist * 2.54
+        
+        # Prepare features in EXACT training order
+        # ['Age', 'Weight', 'Height', 'Neck', 'Abdomen', 'Forearm', 'Wrist']
+        features = np.array([[age, weight, height, neck, abdomen, forearm, wrist]])
+        
+        # Debug: Print features
+        print(f"Input features: Age={age}, Weight={weight}, Height={height}, Neck={neck}, Abdomen={abdomen}, Forearm={forearm}, Wrist={wrist}")
+        
+        # Make prediction
+        body_fat_percentage = model.predict(features)[0]
+        
+        # Debug: Print raw prediction
+        print(f"Raw prediction: {body_fat_percentage}")
+        
+        # Clamp between reasonable values (3-50%)
+        body_fat_percentage = max(3, min(body_fat_percentage, 50))
+        
+        # Determine category
+        if body_fat_percentage < 6:
+            category = 'Essential Fat'
+            category_color = 'text-blue-600 bg-blue-100'
+            health_status = 'essential'
+            recommendation = 'This is extremely low body fat. Essential fat only - consult a healthcare provider.'
+        elif 6 <= body_fat_percentage < 14:
+            category = 'Athletes'
+            category_color = 'text-green-600 bg-green-100'
+            health_status = 'athlete'
+            recommendation = 'Excellent! Athletic body fat range. Great for performance and aesthetics.'
+        elif 14 <= body_fat_percentage < 18:
+            category = 'Fitness'
+            category_color = 'text-green-500 bg-green-50'
+            health_status = 'fitness'
+            recommendation = 'Great! You have a fit and healthy body fat percentage.'
+        elif 18 <= body_fat_percentage < 25:
+            category = 'Average'
+            category_color = 'text-yellow-600 bg-yellow-100'
+            health_status = 'average'
+            recommendation = 'Average body fat range. Consider regular exercise to improve fitness.'
+        else:
+            category = 'Above Average'
+            category_color = 'text-orange-600 bg-orange-100'
+            health_status = 'high'
+            recommendation = 'Consider a combination of diet and exercise to reduce body fat percentage.'
+        
+        # Calculate body composition
+        fat_mass = (body_fat_percentage / 100) * weight
+        lean_body_mass = weight - fat_mass
+        
+        # Health risks
+        risk_factors = []
+        if health_status == 'essential':
+            risk_factors = [
+                'Hormone disruption',
+                'Weakened immune system',
+                'Loss of muscle mass'
+            ]
+        elif health_status == 'high':
+            risk_factors = [
+                'Cardiovascular disease',
+                'Type 2 diabetes',
+                'High blood pressure'
+            ]
+        
+        result = {
+            'body_fat_percentage': round(body_fat_percentage, 1),
+            'category': category,
+            'category_color': category_color,
+            'health_status': health_status,
+            'recommendation': recommendation,
+            'body_composition': {
+                'total_weight': round(weight, 1),
+                'fat_mass': round(fat_mass, 1),
+                'lean_body_mass': round(lean_body_mass, 1)
+            },
+            'risk_factors': risk_factors,
+            'mae': 3.133,
+            'calculation_date': datetime.now().isoformat()
+        }
+        
+        return jsonify({
+            'success': True,
+            'data': result
+        })
+        
+    except Exception as e:
+        print(f"Error in bodyfat calculation: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 400
 
 
 # ============================================
@@ -468,6 +579,7 @@ if __name__ == '__main__':
     print("  POST /api/chatbot          - Fitness AI Chatbot (NEW: No AI model!)")
     print("  POST /api/calculate/bmi    - BMI Calculator")
     print("  POST /api/calculate/calories - Calorie Calculator") 
+    print("  POST /api/calculate/bodyfat - Body Fat Predictor")
     print("  POST /api/calculate/macros - Macro Calculator")
     print("  GET  /api/health           - Health Check")
     print("\nServer running on http://localhost:5000")
