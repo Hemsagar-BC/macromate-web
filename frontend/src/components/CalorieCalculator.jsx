@@ -552,11 +552,76 @@ const CalorieCalculator = ({ onBack }) => {
                 </p>
               </motion.div>
             </div>
+       {/* Expanded Content */}
+            <AnimatePresence>
+              {expandedSection === 'bmr' && (
+                <motion.div
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: 'auto', opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  transition={{ duration: 0.3 }}
+                  className="overflow-hidden mb-6"
+                >
+                  <div className="bg-white rounded-2xl shadow-lg p-6 md:p-8 border-2 border-orange-100">
+                    <h4 className="text-xl font-bold text-gray-800 mb-4">Understanding Your Basal Metabolic Rate (BMR)</h4>
+                    <div className="text-gray-700 leading-relaxed space-y-4">
+                      <p>
+                        Your <strong>Basal Metabolic Rate (BMR)</strong> is the number of calories your body needs <strong>at complete rest</strong> to maintain vital functions like breathing, circulation, and cell repair. It's essentially the <strong>minimum energy your body burns daily</strong>.
+                      </p>
+                      <p>
+                        The <strong>Mifflin St Jeor Equation</strong> (1990) is a widely accepted and research-backed formula for estimating BMR. Studies have shown it to be one of the most accurate methods for healthy adults. It calculates your resting energy expenditure based on your <strong>weight, height, age, and sex</strong>:
+                      </p>
+                      <div className="bg-orange-50 p-4 rounded-lg border border-orange-200">
+                        <p className="font-semibold mb-2 text-orange-800">For Men:</p>
+                        <p className="font-mono text-sm mb-4">BMR = (10 x weight in kg) + (6.25 x height in cm) - (5 x age in years) + 5</p>
+                        <p className="font-semibold mb-2 text-orange-800">For Women:</p>
+                        <p className="font-mono text-sm">(10 x weight in kg) + (6.25 x height in cm) - (5 x age in years) - 161</p>
+                      </div>
+                      <p>
+                        Once you know your BMR, you multiply it by an <strong>Activity Factor</strong> to estimate your <strong>total daily maintenance calories</strong>, which accounts for physical activity:
+                      </p>
+                      <ul className="space-y-1 ml-6 text-gray-700">
+                        <li>Sedentary: <strong>1.2</strong></li>
+                        <li>Lightly active: <strong>1.375</strong></li>
+                        <li>Moderately active: <strong>1.55</strong></li>
+                        <li>Very active: <strong>1.725</strong></li>
+                        <li>Extra active: <strong>1.9</strong></li>
+                      </ul>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
 
-            {/* Expanded Content */}
+              {expandedSection === 'maintenance' && (
+                <motion.div
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: 'auto', opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  transition={{ duration: 0.3 }}
+                  className="overflow-hidden mb-6"
+                >
+                  <div className="bg-white rounded-2xl shadow-lg p-6 md:p-8 border-2 border-green-100">
+                    <h4 className="text-xl font-bold text-gray-800 mb-4">How Maintenance Calories Are Calculated</h4>
+                    <div className="text-gray-700 leading-relaxed space-y-4">
+                      <p>
+                        Macromate calculates your maintenance calories, the number of calories your body needs to maintain its current weight using principles from metabolic research and energy balance studies. According to findings published in the American Journal of Clinical Nutrition (Hall et al., 2012) and the Journal of the Academy of Nutrition and Dietetics (Dhurandhar et al., 2015), your body maintains weight when calorie intake equals calorie expenditure through metabolism, activity, and digestion.
+                      </p>
+                      <div className="bg-green-50 p-4 rounded-lg border border-green-200">
+                        <p className="font-semibold mb-2 text-green-800">For Maintenance:</p>
+                        <p className="font-mono text-sm mb-3">Calories/day = Basal Metabolic Rate (BMR) * Activity Factor</p>
+                        <p className="text-sm font-semibold text-green-700">
+                          Your calculation: {result.bmr} * {result.activityMultiplier} = {result.tdee} calories/day
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+
+         {/* Expanded Content */}
             <AnimatePresence>
            {expandedSection === 'science' && (
-  <motion.div
+            <motion.div
     initial={{ height: 0, opacity: 0 }}
     animate={{ height: 'auto', opacity: 1 }}
     exit={{ height: 0, opacity: 0 }}
@@ -782,7 +847,8 @@ const CalorieCalculator = ({ onBack }) => {
       </div>
     </div>
   </motion.div>
-)}
+)}           
+              </AnimatePresence>
             </AnimatePresence>
           </motion.div>
         </div>
