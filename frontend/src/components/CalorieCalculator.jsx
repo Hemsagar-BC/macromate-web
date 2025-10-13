@@ -136,7 +136,7 @@ const CalorieCalculator = ({ onBack }) => {
     
     if (goalType.includes('Loss') || goalType.includes('loss')) {
       // CUTTING: Higher protein to preserve muscle
-      proteinGrams = Math.round(weight * 2.4);  // 2.4g/kg during deficit
+      proteinGrams = Math.round(weight * 2.1);  // 2.1g/kg during deficit
       const proteinCals = proteinGrams * 4;
       
       // Fat: 25% of calories
@@ -149,7 +149,7 @@ const CalorieCalculator = ({ onBack }) => {
       
     } else if (goalType.includes('Gain') || goalType.includes('gain')) {
       // BULKING: Moderate protein, high carbs
-      proteinGrams = Math.round(weight * 2.2);  // 2.2g/kg during surplus
+      proteinGrams = Math.round(weight * 1.9);  // 1.9g/kg during surplus
       const proteinCals = proteinGrams * 4;
       
       // Fat: 25% of calories
@@ -162,7 +162,7 @@ const CalorieCalculator = ({ onBack }) => {
       
     } else {
       // MAINTENANCE
-      proteinGrams = Math.round(weight * 2.2);  // 2.2g/kg
+      proteinGrams = Math.round(weight * 1.8);  // 2.2g/kg
       const proteinCals = proteinGrams * 4;
       
       // Fat: 25% of calories

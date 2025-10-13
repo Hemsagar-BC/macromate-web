@@ -282,7 +282,7 @@ def calculate_calories():
         
         # CORRECTED MACRO CALCULATIONS - Body-weight based
         # Protein: 2.2g/kg for maintenance (scientifically optimal)
-        protein_grams_maintain = round(weight * 2.2)
+        protein_grams_maintain = round(weight * 1.8)
         protein_calories_maintain = protein_grams_maintain * 4
         
         # Fat: 25% of calories for hormonal health

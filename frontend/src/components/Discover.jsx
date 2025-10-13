@@ -379,33 +379,6 @@ const Discover = () => {
             </div>
           </div>
         </motion.div>
-
-        {/* Quick Tips Section */}
-        <motion.div 
-          className="mt-16 grid md:grid-cols-2 lg:grid-cols-4 gap-6"
-          variants={containerVariants}
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, amount: 0.2 }}
-        >
-          {[
-            { icon: '💡', title: 'Pro Tip', text: 'Track your meals consistently for better results and insights into your eating patterns.' },
-            { icon: '📱', title: 'Smart Tracking', text: 'Use our photo recognition to quickly log meals without manual entry.' },
-            { icon: '🎯', title: 'Goal Setting', text: 'Set realistic and achievable goals based on your lifestyle and preferences.' },
-            { icon: '📈', title: 'Progress', text: 'Monitor your progress with detailed analytics and personalized insights.' }
-          ].map((tip, index) => (
-            <motion.div 
-              key={index}
-              className="bg-white rounded-xl p-6 shadow-lg hover:shadow-xl transition-shadow duration-300"
-              variants={itemVariants}
-              whileHover={{ scale: 1.05, y: -5 }}
-            >
-              <div className="text-3xl mb-4">{tip.icon}</div>
-              <h4 className="font-semibold text-gray-800 mb-2">{tip.title}</h4>
-              <p className="text-gray-600 text-sm">{tip.text}</p>
-            </motion.div>
-          ))}
-        </motion.div>
       </div>
     </section>
   );

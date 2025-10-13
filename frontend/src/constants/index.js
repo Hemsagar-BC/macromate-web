@@ -7,7 +7,7 @@ export const featuresData = {
     {
       icon: "🎯",
       title: "Precise BMI Tracking",
-      description: "Calculate your Body Mass Index with advanced metrics and personalized health insights"
+      description: "Calculate your Body Mass Index and get personalized health insights"
     },
     {
       icon: "🔥",
@@ -27,12 +27,12 @@ export const featuresData = {
     {
       icon: "🔍",
       title: "Food Database Search",
-      description: "Access comprehensive nutrition data for thousands of foods and ingredients"
+      description: "Access comprehensive nutrition data of cooked foods, vegetables and fruits"
     },
     {
-      icon: "⚡",
-      title: "Energy Conversion Tools",
-      description: "Convert between different energy units - calories, joules, and more"
+      icon: "💪",
+      title: "Body Fat Predictor",
+      description: "Science-based ML model predicts your body fat percentage with high accuracy"
     }
   ]
 };

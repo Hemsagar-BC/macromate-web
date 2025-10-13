@@ -123,7 +123,7 @@ const Hero = ({ navigateToPage }) => {
             transition={{ duration: 0.8, delay: 0.6, ease: "easeOut" }}
           >
             {[
-              { value: "10K+", label: "Foods Database" },
+              { value: "Science", label: "Backed Results" },
               { value: "AI", label: "Powered Analysis" },
               { value: "24/7", label: "Tracking Support" },
               { value: "100%", label: "Free to Use" }

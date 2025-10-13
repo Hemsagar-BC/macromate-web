@@ -4,6 +4,7 @@ import Navbar from './components/Navbar';
 import Hero from './components/Hero';
 import Features from './components/Feature';
 import Discover from './components/Discover';
+import Footer from './components/Footer'
 import Calculate from './pages/Calculator';
 import Food from './pages/Food';
 
@@ -37,6 +38,7 @@ const App = () => {
           <Hero navigateToPage={navigateToPage} />
           <Features />
           <Discover/>
+          <Footer/>
         </>
       )}
       

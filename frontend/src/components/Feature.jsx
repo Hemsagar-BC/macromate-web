@@ -153,10 +153,10 @@ const Features = () => {
           viewport={{ once: true, amount: 0.3 }}
         >
           {[
-            { value: "50K+", label: "Active Users" },
-            { value: "1M+", label: "Foods Analyzed" },
-            { value: "99.5%", label: "Uptime" },
-            { value: "4.9★", label: "User Rating" }
+              { value: "ML Powered", label: "Body Fat Predictor" },
+              { value: "Science", label: "Backed Results" },
+              { value: "3.133 MAE", label: "Ridge Regression" },
+              { value: "Simple", label: "Easy Tracking" }
           ].map((stat, index) => (
             <motion.div
               key={index}
