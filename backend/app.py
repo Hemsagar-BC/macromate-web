@@ -6,97 +6,9 @@ Updated to use SimpleFitnessChatbot (no AI model required)
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from datetime import datetime
-from chatbot_simple import SimpleFitnessChatbot
 
 app = Flask(__name__)
 CORS(app)  # Enable CORS for React frontend
-
-# Initialize chatbot (do this once when server starts)
-print("Initializing Fitness Chatbot...")
-try:
-    # Update these paths to where your CSV files are located
-    CSV_FILES = [
-        "data/exercises.csv",
-        "data/nutrition.csv", 
-        "data/workout_plans.csv"
-    ]
-    chatbot = SimpleFitnessChatbot(CSV_FILES)
-    print("✓ Chatbot initialized successfully!")
-except Exception as e:
-    print(f"Warning: Chatbot initialization failed: {e}")
-    chatbot = None
-
-# ============================================
-# CHATBOT ENDPOINT
-# ============================================
-
-@app.route('/api/chatbot', methods=['POST'])
-def chat():
-    """
-    Chatbot endpoint - handles fitness questions
-    Now uses SimpleFitnessChatbot (fast, no AI model needed)
-    """
-    try:
-        if chatbot is None:
-            return jsonify({
-                'success': False,
-                'error': 'Chatbot is not initialized. Please check server logs.'
-            }), 503
-        
-        data = request.json
-        query = data.get('query', '').strip()
-        
-        if not query:
-            return jsonify({
-                'success': False,
-                'error': 'Query cannot be empty'
-            }), 400
-        
-        # Get response from chatbot (instant!)
-        result = chatbot.chat(query)
-        
-        return jsonify({
-            'success': True,
-            'data': {
-                'query': query,
-                'response': result['response'],
-                'type': result['type'],
-                'sources': result['sources'],
-                'processing_time_ms': result['processing_time_ms'],
-                'confidence': result.get('confidence', 0.0),
-                'timestamp': datetime.now().isoformat()
-            }
-        })
-        
-    except Exception as e:
-        return jsonify({
-            'success': False,
-            'error': str(e)
-        }), 500
-
-
-# ============================================
-# HEALTH CHECK ENDPOINT
-# ============================================
-
-@app.route('/api/health', methods=['GET'])
-def health_check():
-    """Health check endpoint for monitoring"""
-    chatbot_stats = {}
-    if chatbot:
-        try:
-            chatbot_stats = chatbot.get_statistics()
-        except:
-            pass
-    
-    return jsonify({
-        'status': 'healthy',
-        'timestamp': datetime.now().isoformat(),
-        'version': '2.0.0',
-        'chatbot_available': chatbot is not None,
-        'chatbot_stats': chatbot_stats
-    })
-
 
 # ============================================
 # BMI CALCULATOR ENDPOINT
