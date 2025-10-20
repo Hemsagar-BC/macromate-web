@@ -248,7 +248,7 @@ const [editForm, setEditForm] = useState({
         {/* Weight Tracker Card */}
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
-          ani mate={{ opacity: 1, scale: 1 }}
+          animate={{ opacity: 1, scale: 1 }}
           className="bg-white rounded-2xl shadow-xl p-6 md:p-8 mb-6"
         >
          <div className="flex items-center justify-between mb-6">
