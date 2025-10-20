@@ -5,3 +5,4 @@ pandas==2.3.3
 tensorflow==2.19.0
 werkzeug==3.0.1
 pillow==10.2.0
+gunicorn
