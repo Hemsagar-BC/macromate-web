@@ -14,6 +14,7 @@ const CalorieCalculator = ({ onBack }) => {
   const [loading, setLoading] = useState(false);
   const [selectedGoal, setSelectedGoal] = useState('maintain');
   const [expandedSection, setExpandedSection] = useState(null);
+  const [goalWeight, setGoalWeight] = useState('');
 
   const activityLevels = {
     sedentary: { 
@@ -289,7 +290,34 @@ const CalorieCalculator = ({ onBack }) => {
       icon: <TrendingUp className="w-6 h-6" />
     }
   ] : [];
+const handleSaveToDashboard = () => {
+  if (!goalWeight) {
+    alert('Please enter your goal weight');
+    return;
+  }
 
+  const dashboardData = {
+    profile: {
+      currentWeight: parseFloat(formData.weight),
+      goalWeight: parseFloat(goalWeight),
+      currentBodyFat: null,
+      targetBodyFat: null,
+      startDate: new Date().toISOString().split('T')[0],
+      age: result.userInfo.age,
+      height: result.userInfo.height,
+      gender: result.userInfo.gender,
+      dailyCalorieGoal: result.goals[selectedGoal]
+    },
+    weightLog: [{
+      date: new Date().toISOString().split('T')[0],
+      weight: parseFloat(formData.weight),
+      bodyFat: null
+    }]
+  };
+
+  localStorage.setItem('macromate_progress', JSON.stringify(dashboardData));
+  alert('✅ Goals saved to Progress Dashboard!');
+};
   const ExpandableSection = ({ title, isExpanded, onToggle, children }) => (
     <motion.div 
       className="bg-white rounded-2xl shadow-lg overflow-hidden mb-6"
@@ -464,7 +492,51 @@ const CalorieCalculator = ({ onBack }) => {
               ))}
             </div>
           </motion.div>
-
+<motion.div 
+  initial={{ opacity: 0, y: 20 }}
+  animate={{ opacity: 1, y: 0 }}
+  transition={{ delay: 1.0 }}
+  className="bg-gradient-to-r from-orange-50 to-orange-100 rounded-2xl p-6 md:p-8 mb-8 border-2 border-orange-200"
+>
+  <h3 className="text-2xl font-bold text-gray-800 mb-3 flex items-center">
+    <span className="text-3xl mr-3">📊</span>
+    Track Your Progress
+  </h3>
+  <p className="text-gray-700 mb-6">
+    Save your current stats and goals to the Progress Dashboard for automatic tracking
+  </p>
+  
+  <div className="grid md:grid-cols-2 gap-4 mb-6">
+    <div>
+      <label className="block text-sm font-medium text-gray-700 mb-2">Current Weight</label>
+      <input 
+        value={formData.weight + ' kg'} 
+        disabled 
+        className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg text-gray-600" 
+      />
+    </div>
+    <div>
+      <label className="block text-sm font-medium text-gray-700 mb-2">Goal Weight (kg)</label>
+      <input 
+        type="number" 
+        step="0.1"
+        value={goalWeight}
+        onChange={(e) => setGoalWeight(e.target.value)}
+        className="w-full px-4 py-3 border border-orange-300 rounded-lg focus:ring-2 focus:ring-orange-500"
+        placeholder="e.g., 70"
+      />
+    </div>
+  </div>
+  
+  <motion.button 
+    whileHover={{ scale: 1.02 }}
+    whileTap={{ scale: 0.98 }}
+    onClick={handleSaveToDashboard} 
+    className="w-full py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl"
+  >
+    💾 Save to Progress Dashboard
+  </motion.button>
+</motion.div>
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}

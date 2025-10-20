@@ -1,0 +1,40 @@
+{
+  "class_names": [
+    "bisi_bele_bath",
+    "burger",
+    "chicken_65",
+    "chicken_biryani",
+    "chicken_curry",
+    "curd_rice",
+    "egg_omelette",
+    "fish_curry",
+    "fried_rice",
+    "grilled_chicken",
+    "idli",
+    "lemon_rice",
+    "masala_dosa",
+    "open_pudi_dosa",
+    "palak_paneer",
+    "paneer_butter_masala",
+    "pizza",
+    "poori",
+    "sambar_rice",
+    "set_dosa",
+    "thatte_idli",
+    "upma",
+    "vada",
+    "vegetable_pulao"
+  ],
+  "num_classes": 24,
+  "confidence_threshold": 0.5,
+  "image_size": [
+    224,
+    224
+  ],
+  "model_info": {
+    "architecture": "MobileNetV2",
+    "final_accuracy": 0.7392739057540894,
+    "top3_accuracy": 0.9405940771102905,
+    "f1_score": 0.7443478195821401
+  }
+}

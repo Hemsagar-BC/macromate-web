@@ -9,6 +9,7 @@ const BodyFatCalculator = ({ onBack, handleBackToHero }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [showResults, setShowResults] = useState(false);
+  const [targetBodyFat, setTargetBodyFat] = useState('');
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -28,7 +29,36 @@ const BodyFatCalculator = ({ onBack, handleBackToHero }) => {
     }
     return true;
   };
+const handleSaveToDashboard = () => {
+  if (!targetBodyFat) {
+    alert('Please enter your target body fat percentage');
+    return;
+  }
 
+  const existingData = JSON.parse(localStorage.getItem('macromate_progress')) || { weightLog: [] };
+  
+  const weight = formData.unit === 'metric' ? formData.weight : (parseFloat(formData.weight) * 0.453592);
+  
+  const updatedData = {
+    ...existingData,
+    profile: {
+      ...existingData.profile,
+      currentWeight: existingData.profile?.currentWeight || parseFloat(weight),
+      goalWeight: existingData.profile?.goalWeight || parseFloat(weight),
+      currentBodyFat: parseFloat(result.body_fat_percentage),
+      targetBodyFat: parseFloat(targetBodyFat),
+      startDate: existingData.profile?.startDate || new Date().toISOString().split('T')[0]
+    },
+    weightLog: existingData.weightLog.length > 0 ? existingData.weightLog : [{
+      date: new Date().toISOString().split('T')[0],
+      weight: parseFloat(weight),
+      bodyFat: parseFloat(result.body_fat_percentage)
+    }]
+  };
+
+  localStorage.setItem('macromate_progress', JSON.stringify(updatedData));
+  alert('✅ Body composition saved to Progress Dashboard!');
+};
   const handleCalculate = async () => {
     if (!validateForm()) return;
     setLoading(true);
@@ -219,7 +249,50 @@ const BodyFatCalculator = ({ onBack, handleBackToHero }) => {
               ))}
             </div>
           </motion.div>
-
+<motion.div 
+  initial={{ opacity: 0 }} 
+  animate={{ opacity: 1 }} 
+  className="bg-gradient-to-r from-blue-50 to-indigo-100 rounded-2xl p-6 md:p-8 mb-8 border-2 border-blue-200"
+>
+  <h3 className="text-2xl font-bold text-gray-800 mb-3 flex items-center">
+    <span className="text-3xl mr-3">💪</span>
+    Track Your Body Composition
+  </h3>
+  <p className="text-gray-700 mb-6">
+    Save your body fat results to track progress over time in your dashboard
+  </p>
+  
+  <div className="grid md:grid-cols-2 gap-4 mb-6">
+    <div>
+      <label className="block text-sm font-medium text-gray-700 mb-2">Current Body Fat</label>
+      <input 
+        value={result.body_fat_percentage + '%'} 
+        disabled 
+        className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg text-gray-600" 
+      />
+    </div>
+    <div>
+      <label className="block text-sm font-medium text-gray-700 mb-2">Target Body Fat (%)</label>
+      <input 
+        type="number" 
+        step="0.1"
+        value={targetBodyFat}
+        onChange={(e) => setTargetBodyFat(e.target.value)}
+        className="w-full px-4 py-3 border border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+        placeholder="e.g., 15"
+      />
+    </div>
+  </div>
+  
+  <motion.button 
+    whileHover={{ scale: 1.02 }}
+    whileTap={{ scale: 0.98 }}
+    onClick={handleSaveToDashboard} 
+    className="w-full py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl"
+  >
+    💾 Save to Progress Dashboard
+  </motion.button>
+</motion.div>
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-col sm:flex-row gap-4 justify-center">
             <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={() => setShowResults(false)} className="px-8 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white font-semibold rounded-xl shadow-lg">
               Calculate Again

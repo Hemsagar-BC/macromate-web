@@ -103,11 +103,15 @@ export const navItems = [
 export const calculateCards = [
   {
     id: "bmi",
-    title: "BMI Calculator",
-    description: "Calculate your Body Mass Index and understand your health status",
+    title: "Progress Dashboard",
+    description: "Track your weight, body fat percentage, and view your progress over time with interactive charts",
     icon: "📊",
     color: "from-orange-400 to-orange-600",
-    features: ["Height & Weight Analysis", "Health Category", "Recommendations"]
+    features: [  // Change these
+    'Weight & Body Fat Tracking',
+    'Interactive Progress Charts',
+    'Quick Stats Overview'
+  ]
   },
   {
     id: "calories",

@@ -6,9 +6,132 @@ Updated to use SimpleFitnessChatbot (no AI model required)
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from datetime import datetime
+from werkzeug.utils import secure_filename
+from food_predictor import FoodClassifier
+import traceback
+import os
+import tensorflow as tf
 
 app = Flask(__name__)
 CORS(app)  # Enable CORS for React frontend
+
+UPLOAD_FOLDER = 'uploads'
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg'}
+MAX_FILE_SIZE = 16 * 1024 * 1024  # 16MB
+
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+app.config['MAX_CONTENT_LENGTH'] = MAX_FILE_SIZE
+
+# Create uploads directory
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+
+# Initialize food classifier with retry logic
+def initialize_classifier():
+    max_retries = 3
+    for attempt in range(max_retries):
+        try:
+            classifier = FoodClassifier()
+            return classifier
+        except Exception as e:
+            print(f"Attempt {attempt + 1} failed: {e}")
+            if attempt == max_retries - 1:
+                print("All attempts to initialize classifier failed")
+                return None
+            print("Retrying...")
+
+print("Initializing food classifier...")
+food_classifier = initialize_classifier()
+
+def allowed_file(filename):
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+@app.route('/api/predict/food', methods=['POST'])
+def predict_food():
+    """Food prediction endpoint"""
+    if not food_classifier:
+        return jsonify({
+            'success': False,
+            'error': 'Food classifier not available. Please check server logs.'
+        }), 503
+
+    try:
+        # Check if file was uploaded
+        if 'image' not in request.files:
+            return jsonify({
+                'success': False,
+                'error': 'No image file provided'
+            }), 400
+
+        file = request.files['image']
+
+        if file.filename == '':
+            return jsonify({
+                'success': False,
+                'error': 'No image selected'
+            }), 400
+
+        if file and allowed_file(file.filename):
+            # Save uploaded file temporarily
+            filename = secure_filename(file.filename)
+            filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+            file.save(filepath)
+
+            try:
+                print(f"Processing image: {filename}")
+                
+                # Make prediction
+                result = food_classifier.predict(filepath)
+
+                # Clean up temporary file
+                if os.path.exists(filepath):
+                    os.remove(filepath)
+
+                if result['status'] == 'error':
+                    return jsonify({
+                        'success': False,
+                        'error': result['error']
+                    }), 500
+
+                print(f"Prediction result: {result['status']}")
+                return jsonify({
+                    'success': True,
+                    **result
+                })
+
+            except Exception as e:
+                # Clean up on error
+                if os.path.exists(filepath):
+                    os.remove(filepath)
+                print(f"Prediction error: {str(e)}")
+                traceback.print_exc()
+                return jsonify({
+                    'success': False,
+                    'error': f'Prediction processing failed: {str(e)}'
+                }), 500
+
+        return jsonify({
+            'success': False,
+            'error': f'Invalid file type. Allowed types: {", ".join(ALLOWED_EXTENSIONS)}'
+        }), 400
+
+    except Exception as e:
+        print(f"Unexpected error: {str(e)}")
+        traceback.print_exc()
+        return jsonify({
+            'success': False,
+            'error': f'Unexpected server error: {str(e)}'
+        }), 500
+
+@app.route('/api/health/food-model', methods=['GET'])
+def food_model_health():
+    """Check if food model is loaded"""
+    return jsonify({
+        'success': True,
+        'model_loaded': food_classifier is not None,
+        'classes_available': len(food_classifier.class_names) if food_classifier else 0,
+        'tensorflow_version': tf.__version__ if food_classifier else 'Unknown'
+    })
 
 # ============================================
 # BMI CALCULATOR ENDPOINT
@@ -418,15 +541,21 @@ if __name__ == '__main__':
     print("\n" + "="*70)
     print("MACROMATE FITNESS BACKEND SERVER")
     print("="*70)
+    print(f"TensorFlow Version: {tf.__version__}")
+    print(f"Food Model Status: {'LOADED ✓' if food_classifier else 'NOT AVAILABLE'}")
+    if food_classifier:
+        print(f"Available Food Classes: {len(food_classifier.class_names)}")
     print("\nAvailable endpoints:")
-    print("  POST /api/chatbot          - Fitness AI Chatbot (NEW: No AI model!)")
+    print("  POST /api/predict/food    - Food Image Analysis (AI)")
+    print("  GET  /api/health/food-model - Food Model Health Check")
     print("  POST /api/calculate/bmi    - BMI Calculator")
     print("  POST /api/calculate/calories - Calorie Calculator") 
     print("  POST /api/calculate/bodyfat - Body Fat Predictor")
-    print("  POST /api/calculate/macros - Macro Calculator")
     print("  GET  /api/health           - Health Check")
     print("\nServer running on http://localhost:5000")
     print("="*70 + "\n")
+    
+    app.run(debug=True, host='0.0.0.0', port=5000)
     
     if __name__ == '__main__':
       app.run(debug=False, host='0.0.0.0', port=5000)

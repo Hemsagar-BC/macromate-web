@@ -39,6 +39,7 @@ const App = () => {
           <Features />
           <Discover/>
           <Footer/>
+          
         </>
       )}
       

@@ -1,0 +1,135 @@
+{
+  "chicken_burger": {
+    "calories": 354,
+    "protein": 17,
+    "carbs": 35,
+    "fat": 16,
+    "serving": "1 burger (150g)"
+  },
+  "coconut_chutney": {
+    "calories": 120,
+    "protein": 2,
+    "carbs": 10,
+    "fat": 8,
+    "serving": "2 tbsp (30g)"
+  },
+  "curd_rice": {
+    "calories": 130,
+    "protein": 4,
+    "carbs": 22,
+    "fat": 3,
+    "serving": "1 bowl (150g)"
+  },
+  "idli": {
+    "calories": 39,
+    "protein": 2,
+    "carbs": 8,
+    "fat": 0.2,
+    "serving": "1 idli (40g)"
+  },
+  "lemon_rice": {
+    "calories": 180,
+    "protein": 3,
+    "carbs": 35,
+    "fat": 4,
+    "serving": "1 bowl (150g)"
+  },
+  "masala_dosa": {
+    "calories": 168,
+    "protein": 4,
+    "carbs": 28,
+    "fat": 4,
+    "serving": "1 dosa (120g)"
+  },
+  "paneer_butter_masala": {
+    "calories": 285,
+    "protein": 12,
+    "carbs": 15,
+    "fat": 20,
+    "serving": "1 bowl (200g)"
+  },
+  "pizza": {
+    "calories": 266,
+    "protein": 11,
+    "carbs": 33,
+    "fat": 10,
+    "serving": "1 slice (100g)"
+  },
+  "poha": {
+    "calories": 180,
+    "protein": 3,
+    "carbs": 35,
+    "fat": 3,
+    "serving": "1 bowl (150g)"
+  },
+  "pongal": {
+    "calories": 200,
+    "protein": 5,
+    "carbs": 35,
+    "fat": 5,
+    "serving": "1 bowl (150g)"
+  },
+  "poori": {
+    "calories": 296,
+    "protein": 5,
+    "carbs": 40,
+    "fat": 13,
+    "serving": "2 pooris (80g)"
+  },
+  "sagu": {
+    "calories": 150,
+    "protein": 4,
+    "carbs": 20,
+    "fat": 6,
+    "serving": "1 bowl (150g)"
+  },
+  "sambar": {
+    "calories": 85,
+    "protein": 4,
+    "carbs": 15,
+    "fat": 2,
+    "serving": "1 bowl (200ml)"
+  },
+  "set_dosa": {
+    "calories": 140,
+    "protein": 3,
+    "carbs": 25,
+    "fat": 3,
+    "serving": "2 dosas (100g)"
+  },
+  "thatte_idli": {
+    "calories": 45,
+    "protein": 2,
+    "carbs": 9,
+    "fat": 0.3,
+    "serving": "1 idli (50g)"
+  },
+  "upma": {
+    "calories": 170,
+    "protein": 4,
+    "carbs": 30,
+    "fat": 4,
+    "serving": "1 bowl (150g)"
+  },
+  "vada": {
+    "calories": 234,
+    "protein": 6,
+    "carbs": 28,
+    "fat": 11,
+    "serving": "2 vadas (80g)"
+  },
+  "veg_burger": {
+    "calories": 280,
+    "protein": 10,
+    "carbs": 40,
+    "fat": 9,
+    "serving": "1 burger (150g)"
+  },
+  "vegetable_pulav": {
+    "calories": 210,
+    "protein": 5,
+    "carbs": 38,
+    "fat": 5,
+    "serving": "1 bowl (200g)"
+  }
+}

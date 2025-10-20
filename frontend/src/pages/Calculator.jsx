@@ -1,7 +1,7 @@
 // pages/Calculate.jsx - With Particle Background
 import React, { useState, useEffect } from 'react';
 import { calculateCards } from '../constants';
-import BMICalculator from '../components/BMICalculator';
+import ProgressDashboard from '../components/ProgressDashboard.jsx';
 import CalorieCalculator from '../components/CalorieCalculator';
 import BodyFatCalculator from '../components/BodyFatCalculator';
 // Particle Background Component
@@ -122,8 +122,11 @@ const Calculate = ({ navigateToPage }) => {
   };
 
   if (activeCalculator === 'bmi') {
-    return <BMICalculator onBack={handleBackToCalculators} handleBackToHero={handleBackToHero} />;
-  }
+  return <ProgressDashboard 
+    onBack={handleBackToCalculators} 
+    navigateToCalculator={(calcId) => setActiveCalculator(calcId)}
+  />;
+}
 
   if (activeCalculator === 'calories') {
     return <CalorieCalculator onBack={handleBackToCalculators} handleBackToHero={handleBackToHero} />;
