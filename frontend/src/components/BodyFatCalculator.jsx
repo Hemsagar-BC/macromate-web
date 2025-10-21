@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
+
 const BodyFatCalculator = ({ onBack, handleBackToHero }) => {
   const [formData, setFormData] = useState({
     age: '', weight: '', height: '', neck: '', abdomen: '', forearm: '', wrist: '', unit: 'metric'

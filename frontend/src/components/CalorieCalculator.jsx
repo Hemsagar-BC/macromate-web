@@ -324,67 +324,7 @@ const handleSaveToDashboard = () => {
   alert('✅ Goals saved to Progress Dashboard & Food Log!');
 };
 
-const handleSaveToFoodLog = () => {
-  const selectedGoalTitle = goalCards.find(g => g.id === selectedGoal)?.title || 'Maintain Weight';
-  const selectedCalories = result.goals[selectedGoal];
-  const selectedMacrosData = calculateMacros(selectedCalories, selectedGoalTitle);
 
-  // ALSO save to progress dashboard so FoodLog's green banner shows correct goals
-  const dashboardData = {
-    profile: {
-      currentWeight: parseFloat(formData.weight),
-      goalWeight: parseFloat(formData.weight), // Default to current weight if not set
-      currentBodyFat: null,
-      targetBodyFat: null,
-      startDate: new Date().toISOString().split('T')[0],
-      age: result.userInfo.age,
-      height: result.userInfo.height,
-      gender: result.userInfo.gender,
-      dailyCalorieGoal: selectedCalories,
-      goalType: selectedGoalTitle,
-      selectedGoalId: selectedGoal
-    },
-    weightLog: [{
-      date: new Date().toISOString().split('T')[0],
-      weight: parseFloat(formData.weight),
-      bodyFat: null
-    }]
-  };
-  
-  // Save to progress dashboard
-  localStorage.setItem('macromate_progress', JSON.stringify(dashboardData));
-
-  // Create a food log entry with the selected calories and macros
-  const foodLogEntry = {
-    id: Date.now(),
-    name: `${selectedGoalTitle} Daily Target`,
-    calories: selectedCalories,
-    protein: selectedMacrosData.protein.grams,
-    carbs: selectedMacrosData.carbs.grams,
-    fat: selectedMacrosData.fat.grams,
-    mealType: 'target',
-    timestamp: new Date().toISOString(),
-    isTarget: true
-  };
-
-  // Get today's date
-  const today = new Date().toISOString().split('T')[0];
-  
-  // Load existing food log for today
-  const existingLog = localStorage.getItem(`macromate_foodlog_${today}`);
-  let foodLog = existingLog ? JSON.parse(existingLog) : [];
-  
-  // Remove any existing target entries
-  foodLog = foodLog.filter(item => !item.isTarget);
-  
-  // Add new target
-  foodLog.unshift(foodLogEntry);
-  
-  // Save back to localStorage
-  localStorage.setItem(`macromate_foodlog_${today}`, JSON.stringify(foodLog));
-  
-  alert('✅ Daily target saved to Food Log & Progress Dashboard! Your calorie and macro goals are now synced everywhere.');
-};
 
   if (result) {
     const selectedMacros = calculateMacros(
