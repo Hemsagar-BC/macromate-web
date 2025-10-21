@@ -1,6 +1,7 @@
-// pages/Food.jsx - UPDATED with Real API Integration
+// pages/Food.jsx - UPDATED with FoodLog Integration
 import React, { useState, useEffect, useRef } from 'react';
 import { foodCards } from '../constants';
+import FoodLog from './FoodLog'; // Import FoodLog component
 
 // Particle Background Component
 const ParticleBackground = () => {
@@ -93,6 +94,7 @@ const FoodCard = ({ card, onClick }) => {
             {card.id === 'search' && 'Start Searching'}
             {card.id === 'upload' && 'Upload Photo'}
             {card.id === 'converter' && 'Convert Now'}
+            {card.id === 'foodlog' && 'Open Food Log'}
           </span>
         </button>
 
@@ -112,14 +114,25 @@ const FoodCard = ({ card, onClick }) => {
 
 const Food = ({ navigateToPage }) => {
   const [activeModal, setActiveModal] = useState(null);
+  const [showFoodLog, setShowFoodLog] = useState(false); // New state for FoodLog
 
   const handleCardClick = (cardId) => {
-    setActiveModal(cardId);
+    // If foodlog card is clicked, show FoodLog component
+    if (cardId === 'foodlog') {
+      setShowFoodLog(true);
+    } else {
+      setActiveModal(cardId);
+    }
   };
 
   const closeModal = () => {
     setActiveModal(null);
   };
+
+  // If FoodLog is active, render it instead
+  if (showFoodLog) {
+    return <FoodLog navigateToPage={navigateToPage} onBack={() => setShowFoodLog(false)} />;
+  }
 
   const MockFoodSearch = () => {
     const [searchQuery, setSearchQuery] = useState('');
@@ -181,405 +194,400 @@ const Food = ({ navigateToPage }) => {
     );
   };
 
-// ============================================
-// REPLACEMENT 1: RealPhotoUpload Component
-// Replace the entire RealPhotoUpload function (starting from line ~146)
-// ============================================
+  const RealPhotoUpload = () => {
+    const [selectedFile, setSelectedFile] = useState(null);
+    const [previewUrl, setPreviewUrl] = useState(null);
+    const [isAnalyzing, setIsAnalyzing] = useState(false);
+    const [result, setResult] = useState(null);
+    const [error, setError] = useState(null);
+    const fileInputRef = useRef(null);
 
-const RealPhotoUpload = () => {
-  const [selectedFile, setSelectedFile] = useState(null);
-  const [previewUrl, setPreviewUrl] = useState(null);
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [result, setResult] = useState(null);
-  const [error, setError] = useState(null);
-  const fileInputRef = useRef(null);
+    const handleFileSelect = (event) => {
+      const file = event.target.files[0];
+      if (file) {
+        if (!file.type.startsWith('image/')) {
+          setError('Please select a valid image file');
+          return;
+        }
 
-  const handleFileSelect = (event) => {
-    const file = event.target.files[0];
-    if (file) {
-      if (!file.type.startsWith('image/')) {
-        setError('Please select a valid image file');
+        if (file.size > 5 * 1024 * 1024) {
+          setError('Image size should be less than 5MB');
+          return;
+        }
+
+        setSelectedFile(file);
+        setPreviewUrl(URL.createObjectURL(file));
+        setError(null);
+        setResult(null);
+      }
+    };
+
+    const handleAnalyze = async () => {
+      if (!selectedFile) {
+        setError('Please select an image first');
         return;
       }
 
-      if (file.size > 5 * 1024 * 1024) {
-        setError('Image size should be less than 5MB');
-        return;
-      }
-
-      setSelectedFile(file);
-      setPreviewUrl(URL.createObjectURL(file));
+      setIsAnalyzing(true);
       setError(null);
-      setResult(null);
-    }
-  };
 
-  const handleAnalyze = async () => {
-    if (!selectedFile) {
-      setError('Please select an image first');
-      return;
-    }
+      const formData = new FormData();
+      formData.append('image', selectedFile);
 
-    setIsAnalyzing(true);
-    setError(null);
+      try {
+        const response = await fetch('http://localhost:5000/api/predict/food', {
+          method: 'POST',
+          body: formData,
+        });
 
-    const formData = new FormData();
-    formData.append('image', selectedFile);
+        const data = await response.json();
 
-    try {
-      const response = await fetch('http://localhost:5000/api/predict/food', {
-        method: 'POST',
-        body: formData,
-      });
-
-      const data = await response.json();
-
-      if (data.success) {
-        setResult(data);
-      } else {
-        setError(data.error || 'Prediction failed');
+        if (data.success) {
+          setResult(data);
+        } else {
+          setError(data.error || 'Prediction failed');
+        }
+      } catch (err) {
+        setError('Failed to connect to server. Make sure backend is running.');
+        console.error('Error:', err);
+      } finally {
+        setIsAnalyzing(false);
       }
-    } catch (err) {
-      setError('Failed to connect to server. Make sure backend is running.');
-      console.error('Error:', err);
-    } finally {
-      setIsAnalyzing(false);
-    }
-  };
+    };
 
-  const handleReset = () => {
-    setSelectedFile(null);
-    setPreviewUrl(null);
-    setResult(null);
-    setError(null);
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
-    }
-  };
+    const handleReset = () => {
+      setSelectedFile(null);
+      setPreviewUrl(null);
+      setResult(null);
+      setError(null);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    };
 
-  return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[95vh] overflow-y-auto">
-        {/* Header */}
-        <div className="sticky top-0 bg-gradient-to-r from-orange-500 to-orange-600 text-white px-6 py-4 rounded-t-2xl z-10">
-          <div className="flex justify-between items-center">
-            <div>
-              <h3 className="text-2xl font-bold">AI Food Analysis</h3>
-              <p className="text-orange-100 text-sm mt-1">Powered by Deep Learning</p>
-            </div>
-            <button 
-              onClick={closeModal} 
-              className="text-white hover:bg-white/20 rounded-full p-2 transition-all"
-            >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-          </div>
-        </div>
-
-        <div className="p-6">
-          {/* Info Banner - Only show initially */}
-          {!previewUrl && !result && (
-            <div className="mb-6 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-4">
-              <div className="flex items-start">
-                <div className="flex-shrink-0">
-                  <svg className="w-5 h-5 text-blue-600 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
-                  </svg>
-                </div>
-                <div className="ml-3 flex-1">
-                  <h4 className="text-sm font-semibold text-blue-900 mb-1">Specialized for South Indian Cuisine</h4>
-                  <p className="text-sm text-blue-800">
-                    Our AI model is trained to recognize <strong>20+ popular Typical South Indian dishes</strong>
-                  </p>
-                </div>
+    return (
+      <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+        <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[95vh] overflow-y-auto">
+          {/* Header */}
+          <div className="sticky top-0 bg-gradient-to-r from-orange-500 to-orange-600 text-white px-6 py-4 rounded-t-2xl z-10">
+            <div className="flex justify-between items-center">
+              <div>
+                <h3 className="text-2xl font-bold">AI Food Analysis</h3>
+                <p className="text-orange-100 text-sm mt-1">Powered by Deep Learning</p>
               </div>
-            </div>
-          )}
-
-          {/* Upload Section */}
-          {!previewUrl && (
-            <div className="mb-6">
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/*"
-                onChange={handleFileSelect}
-                className="hidden"
-                id="food-upload"
-              />
-              <label
-                htmlFor="food-upload"
-                className="group border-2 border-dashed border-orange-300 hover:border-orange-400 rounded-xl p-16 text-center transition-all cursor-pointer block bg-gradient-to-br from-orange-50/50 to-white hover:from-orange-50 hover:to-orange-100/30"
+              <button 
+                onClick={closeModal} 
+                className="text-white hover:bg-white/20 rounded-full p-2 transition-all"
               >
-                <div className="text-6xl mb-4 group-hover:scale-110 transition-transform">📸</div>
-                <p className="text-gray-700 font-semibold text-lg mb-2">Click to upload your food photo</p>
-                <p className="text-sm text-gray-500">Supports: JPG, JPEG, PNG (max 5MB)</p>
-                <div className="mt-4 inline-flex items-center px-4 py-2 bg-orange-100 text-orange-700 rounded-lg text-sm font-medium group-hover:bg-orange-200 transition-colors">
-                  <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-                  </svg>
-                  Select Image
-                </div>
-              </label>
-            </div>
-          )}
-
-          {/* Preview & Analyze Section */}
-          {previewUrl && !result && (
-            <div className="space-y-4">
-              <div className="relative rounded-xl overflow-hidden shadow-lg">
-                <img 
-                  src={previewUrl} 
-                  alt="Food preview" 
-                  className="w-full h-80 object-cover"
-                />
-                <button
-                  onClick={handleReset}
-                  className="absolute top-3 right-3 bg-red-500 hover:bg-red-600 text-white p-2.5 rounded-full shadow-lg transition-all hover:scale-110"
-                  title="Remove image"
-                >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-              </div>
-              
-              <button
-                onClick={handleAnalyze}
-                disabled={isAnalyzing}
-                className="w-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white px-6 py-4 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed text-lg"
-              >
-                {isAnalyzing ? (
-                  <span className="flex items-center justify-center">
-                    <svg className="animate-spin h-6 w-6 mr-3" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"></circle>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                    Analyzing your food...
-                  </span>
-                ) : (
-                  <span className="flex items-center justify-center">
-                    <svg className="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
-                    </svg>
-                    Analyze Food
-                  </span>
-                )}
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
               </button>
             </div>
-          )}
+          </div>
 
-          {/* Error Message */}
-          {error && (
-            <div className="mb-6 p-4 bg-red-50 border-l-4 border-red-400 rounded-lg">
-              <div className="flex items-start">
-                <svg className="w-5 h-5 text-red-400 mt-0.5 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-                </svg>
-                <p className="text-red-700 font-medium">{error}</p>
-              </div>
-            </div>
-          )}
-
-          {/* Success Results Section */}
-          {result && result.status === 'recognized' && (
-            <div className="space-y-6">
-              {/* Image with Badge */}
-              <div className="relative rounded-xl overflow-hidden shadow-xl">
-                <img 
-                  src={previewUrl} 
-                  alt="Analyzed food" 
-                  className="w-full h-64 object-cover"
-                />
-                <div className="absolute top-4 right-4 bg-green-500 text-white px-4 py-2 rounded-full text-sm font-bold shadow-lg flex items-center animate-pulse">
-                  <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                  {result.confidence}% Match
-                </div>
-              </div>
-
-              {/* Food Name Card */}
-              <div className="bg-gradient-to-r from-orange-500 to-orange-600 rounded-xl p-6 shadow-lg text-white">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-orange-100 text-sm font-medium mb-1">Identified Dish</p>
-                    <h4 className="text-3xl font-bold capitalize">
-                      {result.food.replace(/_/g, ' ')}
-                    </h4>
-                    <p className="text-orange-100 mt-2 flex items-center">
-                      <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3" />
-                      </svg>
-                      {result.macros.serving}
-                    </p>
-                  </div>
-                  <div className="text-6xl opacity-90">🍽️</div>
-                </div>
-              </div>
-
-              {/* Nutritional Information Grid */}
-              <div className="bg-gradient-to-br from-gray-50 to-white rounded-xl shadow-lg p-6 border border-gray-200">
-                <div className="flex items-center justify-between mb-5">
-                  <h5 className="text-xl font-bold text-gray-800 flex items-center">
-                    <svg className="w-6 h-6 mr-2 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                    </svg>
-                    Nutritional Information
-                  </h5>
-                </div>
-                
-                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-                  <div className="bg-gradient-to-br from-orange-50 to-orange-100 rounded-lg p-5 text-center border-2 border-orange-200 hover:shadow-md transition-shadow">
-                    <div className="text-4xl mb-2">🔥</div>
-                    <div className="text-3xl font-bold text-orange-600 mb-1">{result.macros.calories}</div>
-                    <div className="text-sm font-semibold text-orange-800">Calories</div>
-                    <div className="text-xs text-orange-600 mt-1">kcal</div>
-                  </div>
-                  
-                  <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg p-5 text-center border-2 border-blue-200 hover:shadow-md transition-shadow">
-                    <div className="text-4xl mb-2">💪</div>
-                    <div className="text-3xl font-bold text-blue-600 mb-1">{result.macros.protein}g</div>
-                    <div className="text-sm font-semibold text-blue-800">Protein</div>
-                    <div className="text-xs text-blue-600 mt-1">grams</div>
-                  </div>
-                  
-                  <div className="bg-gradient-to-br from-yellow-50 to-yellow-100 rounded-lg p-5 text-center border-2 border-yellow-200 hover:shadow-md transition-shadow">
-                    <div className="text-4xl mb-2">🌾</div>
-                    <div className="text-3xl font-bold text-yellow-600 mb-1">{result.macros.carbs}g</div>
-                    <div className="text-sm font-semibold text-yellow-800">Carbs</div>
-                    <div className="text-xs text-yellow-600 mt-1">grams</div>
-                  </div>
-                  
-                  <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-lg p-5 text-center border-2 border-green-200 hover:shadow-md transition-shadow">
-                    <div className="text-4xl mb-2">🥑</div>
-                    <div className="text-3xl font-bold text-green-600 mb-1">{result.macros.fat}g</div>
-                    <div className="text-sm font-semibold text-green-800">Fat</div>
-                    <div className="text-xs text-green-600 mt-1">grams</div>
-                  </div>
-                </div>
-
-                {/* Important Notes */}
-                <div className="bg-blue-50 border-l-4 border-blue-400 rounded-r-lg p-4">
-                  <div className="flex items-start">
-                    <svg className="w-5 h-5 text-blue-600 mt-0.5 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
-                    </svg>
-                    <div className="text-sm text-blue-900">
-                      <p className="font-semibold mb-2">Important Notes:</p>
-                      <ul className="space-y-1.5 text-blue-800">
-                        <li className="flex items-start">
-                          <span className="mr-2">•</span>
-                          <span>These values are based on typical Indian restaurant/homemade preparations</span>
-                        </li>
-                        <li className="flex items-start">
-                          <span className="mr-2">•</span>
-                          <span>Macros can vary based on cooking methods, oil used, and ingredient proportions</span>
-                        </li>
-                        <li className="flex items-start">
-                          <span className="mr-2">•</span>
-                          <span>Serving sizes are standard portions commonly consumed</span>
-                        </li>
-                        <li className="flex items-start">
-                          <span className="mr-2">•</span>
-                          <span>All values are approximate and rounded to whole numbers for practical use</span>
-                        </li>
-                      </ul>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Action Buttons */}
-              <div className="flex flex-col sm:flex-row gap-3">
-                <button
-                  onClick={handleReset}
-                  className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 px-6 py-3.5 rounded-xl font-semibold transition-all shadow hover:shadow-md flex items-center justify-center"
-                >
-                  <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                  </svg>
-                  Analyze Another
-                </button>
-                <button
-                  onClick={closeModal}
-                  className="flex-1 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white px-6 py-3.5 rounded-xl font-semibold transition-all shadow-lg hover:shadow-xl flex items-center justify-center"
-                >
-                  <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                  </svg>
-                  Done
-                </button>
-              </div>
-            </div>
-          )}
-
-          {/* Unknown Food Result */}
-          {result && result.status === 'unknown' && (
-            <div className="space-y-6">
-              <div className="relative rounded-xl overflow-hidden shadow-lg">
-                <img 
-                  src={previewUrl} 
-                  alt="Analyzed food" 
-                  className="w-full h-64 object-cover opacity-60"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
-              </div>
-
-              <div className="bg-gradient-to-br from-yellow-50 to-orange-50 border-2 border-yellow-300 rounded-xl p-6 shadow-lg">
+          <div className="p-6">
+            {/* Info Banner - Only show initially */}
+            {!previewUrl && !result && (
+              <div className="mb-6 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-4">
                 <div className="flex items-start">
                   <div className="flex-shrink-0">
-                    <div className="w-12 h-12 bg-yellow-400 rounded-full flex items-center justify-center text-2xl">
-                      ⚠️
-                    </div>
+                    <svg className="w-5 h-5 text-blue-600 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                    </svg>
                   </div>
-                  <div className="ml-4 flex-1">
-                    <h4 className="text-xl font-bold text-gray-900 mb-3">
-                      Unable to Identify This Dish
-                    </h4>
-                    <ul className="space-y-2 mb-4">
-                      <li className="flex items-start text-gray-700">
-                        <span className="text-orange-500 mr-2 font-bold">•</span>
-                        <span>The dish is not in my training dataset of 20+ South Indian dishes</span>
-                      </li>
-                      <li className="flex items-start text-gray-700">
-                        <span className="text-orange-500 mr-2 font-bold">•</span>
-                        <span>The image quality or lighting needs improvement</span>
-                      </li>
-                      <li className="flex items-start text-gray-700">
-                        <span className="text-orange-500 mr-2 font-bold">•</span>
-                        <span>The food presentation differs from my training examples</span>
-                      </li>
-                    </ul>
-                    <div className="bg-white/70 rounded-lg p-4 border border-yellow-200">
-                      <p className="text-sm text-gray-800 font-medium mb-1">💡 Suggestion:</p>
-                      <p className="text-sm text-gray-700">
-                        Try taking a clearer photo with better lighting, or ensure the dish is one of the popular South Indian items I'm trained to recognize.
-                      </p>
-                    </div>
+                  <div className="ml-3 flex-1">
+                    <h4 className="text-sm font-semibold text-blue-900 mb-1">Specialized for South Indian Cuisine</h4>
+                    <p className="text-sm text-blue-800">
+                      Our AI model is trained to recognize <strong>20+ popular Typical South Indian dishes</strong>
+                    </p>
                   </div>
                 </div>
               </div>
+            )}
 
-              <button
-                onClick={handleReset}
-                className="w-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white px-6 py-4 rounded-xl font-semibold transition-all shadow-lg hover:shadow-xl flex items-center justify-center"
-              >
-                <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
-                </svg>
-                Try Another Photo
-              </button>
-            </div>
-          )}
+            {/* Upload Section */}
+            {!previewUrl && (
+              <div className="mb-6">
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleFileSelect}
+                  className="hidden"
+                  id="food-upload"
+                />
+                <label
+                  htmlFor="food-upload"
+                  className="group border-2 border-dashed border-orange-300 hover:border-orange-400 rounded-xl p-16 text-center transition-all cursor-pointer block bg-gradient-to-br from-orange-50/50 to-white hover:from-orange-50 hover:to-orange-100/30"
+                >
+                  <div className="text-6xl mb-4 group-hover:scale-110 transition-transform">📸</div>
+                  <p className="text-gray-700 font-semibold text-lg mb-2">Click to upload your food photo</p>
+                  <p className="text-sm text-gray-500">Supports: JPG, JPEG, PNG (max 5MB)</p>
+                  <div className="mt-4 inline-flex items-center px-4 py-2 bg-orange-100 text-orange-700 rounded-lg text-sm font-medium group-hover:bg-orange-200 transition-colors">
+                    <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                    </svg>
+                    Select Image
+                  </div>
+                </label>
+              </div>
+            )}
+
+            {/* Preview & Analyze Section */}
+            {previewUrl && !result && (
+              <div className="space-y-4">
+                <div className="relative rounded-xl overflow-hidden shadow-lg">
+                  <img 
+                    src={previewUrl} 
+                    alt="Food preview" 
+                    className="w-full h-80 object-cover"
+                  />
+                  <button
+                    onClick={handleReset}
+                    className="absolute top-3 right-3 bg-red-500 hover:bg-red-600 text-white p-2.5 rounded-full shadow-lg transition-all hover:scale-110"
+                    title="Remove image"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+                
+                <button
+                  onClick={handleAnalyze}
+                  disabled={isAnalyzing}
+                  className="w-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white px-6 py-4 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed text-lg"
+                >
+                  {isAnalyzing ? (
+                    <span className="flex items-center justify-center">
+                      <svg className="animate-spin h-6 w-6 mr-3" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      Analyzing your food...
+                    </span>
+                  ) : (
+                    <span className="flex items-center justify-center">
+                      <svg className="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                      </svg>
+                      Analyze Food
+                    </span>
+                  )}
+                </button>
+              </div>
+            )}
+
+            {/* Error Message */}
+            {error && (
+              <div className="mb-6 p-4 bg-red-50 border-l-4 border-red-400 rounded-lg">
+                <div className="flex items-start">
+                  <svg className="w-5 h-5 text-red-400 mt-0.5 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                  </svg>
+                  <p className="text-red-700 font-medium">{error}</p>
+                </div>
+              </div>
+            )}
+
+            {/* Success Results Section */}
+            {result && result.status === 'recognized' && (
+              <div className="space-y-6">
+                {/* Image with Badge */}
+                <div className="relative rounded-xl overflow-hidden shadow-xl">
+                  <img 
+                    src={previewUrl} 
+                    alt="Analyzed food" 
+                    className="w-full h-64 object-cover"
+                  />
+                  <div className="absolute top-4 right-4 bg-green-500 text-white px-4 py-2 rounded-full text-sm font-bold shadow-lg flex items-center animate-pulse">
+                    <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    {result.confidence}% Match
+                  </div>
+                </div>
+
+                {/* Food Name Card */}
+                <div className="bg-gradient-to-r from-orange-500 to-orange-600 rounded-xl p-6 shadow-lg text-white">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-orange-100 text-sm font-medium mb-1">Identified Dish</p>
+                      <h4 className="text-3xl font-bold capitalize">
+                        {result.food.replace(/_/g, ' ')}
+                      </h4>
+                      <p className="text-orange-100 mt-2 flex items-center">
+                        <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3" />
+                        </svg>
+                        {result.macros.serving}
+                      </p>
+                    </div>
+                    <div className="text-6xl opacity-90">🍽️</div>
+                  </div>
+                </div>
+
+                {/* Nutritional Information Grid */}
+                <div className="bg-gradient-to-br from-gray-50 to-white rounded-xl shadow-lg p-6 border border-gray-200">
+                  <div className="flex items-center justify-between mb-5">
+                    <h5 className="text-xl font-bold text-gray-800 flex items-center">
+                      <svg className="w-6 h-6 mr-2 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                      </svg>
+                      Nutritional Information
+                    </h5>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                    <div className="bg-gradient-to-br from-orange-50 to-orange-100 rounded-lg p-5 text-center border-2 border-orange-200 hover:shadow-md transition-shadow">
+                      <div className="text-4xl mb-2">🔥</div>
+                      <div className="text-3xl font-bold text-orange-600 mb-1">{result.macros.calories}</div>
+                      <div className="text-sm font-semibold text-orange-800">Calories</div>
+                      <div className="text-xs text-orange-600 mt-1">kcal</div>
+                    </div>
+                    
+                    <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg p-5 text-center border-2 border-blue-200 hover:shadow-md transition-shadow">
+                      <div className="text-4xl mb-2">💪</div>
+                      <div className="text-3xl font-bold text-blue-600 mb-1">{result.macros.protein}g</div>
+                      <div className="text-sm font-semibold text-blue-800">Protein</div>
+                      <div className="text-xs text-blue-600 mt-1">grams</div>
+                    </div>
+                    
+                    <div className="bg-gradient-to-br from-yellow-50 to-yellow-100 rounded-lg p-5 text-center border-2 border-yellow-200 hover:shadow-md transition-shadow">
+                      <div className="text-4xl mb-2">🌾</div>
+                      <div className="text-3xl font-bold text-yellow-600 mb-1">{result.macros.carbs}g</div>
+                      <div className="text-sm font-semibold text-yellow-800">Carbs</div>
+                      <div className="text-xs text-yellow-600 mt-1">grams</div>
+                    </div>
+                    
+                    <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-lg p-5 text-center border-2 border-green-200 hover:shadow-md transition-shadow">
+                      <div className="text-4xl mb-2">🥑</div>
+                      <div className="text-3xl font-bold text-green-600 mb-1">{result.macros.fat}g</div>
+                      <div className="text-sm font-semibold text-green-800">Fat</div>
+                      <div className="text-xs text-green-600 mt-1">grams</div>
+                    </div>
+                  </div>
+
+                  {/* Important Notes */}
+                  <div className="bg-blue-50 border-l-4 border-blue-400 rounded-r-lg p-4">
+                    <div className="flex items-start">
+                      <svg className="w-5 h-5 text-blue-600 mt-0.5 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                      </svg>
+                      <div className="text-sm text-blue-900">
+                        <p className="font-semibold mb-2">Important Notes:</p>
+                        <ul className="space-y-1.5 text-blue-800">
+                          <li className="flex items-start">
+                            <span className="mr-2">•</span>
+                            <span>These values are based on typical Indian restaurant/homemade preparations</span>
+                          </li>
+                          <li className="flex items-start">
+                            <span className="mr-2">•</span>
+                            <span>Macros can vary based on cooking methods, oil used, and ingredient proportions</span>
+                          </li>
+                          <li className="flex items-start">
+                            <span className="mr-2">•</span>
+                            <span>Serving sizes are standard portions commonly consumed</span>
+                          </li>
+                          <li className="flex items-start">
+                            <span className="mr-2">•</span>
+                            <span>All values are approximate and rounded to whole numbers for practical use</span>
+                          </li>
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <button
+                    onClick={handleReset}
+                    className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 px-6 py-3.5 rounded-xl font-semibold transition-all shadow hover:shadow-md flex items-center justify-center"
+                  >
+                    <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                    Analyze Another
+                  </button>
+                  <button
+                    onClick={closeModal}
+                    className="flex-1 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white px-6 py-3.5 rounded-xl font-semibold transition-all shadow-lg hover:shadow-xl flex items-center justify-center"
+                  >
+                    <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                    Done
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Unknown Food Result */}
+            {result && result.status === 'unknown' && (
+              <div className="space-y-6">
+                <div className="relative rounded-xl overflow-hidden shadow-lg">
+                  <img 
+                    src={previewUrl} 
+                    alt="Analyzed food" 
+                    className="w-full h-64 object-cover opacity-60"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
+                </div>
+
+                <div className="bg-gradient-to-br from-yellow-50 to-orange-50 border-2 border-yellow-300 rounded-xl p-6 shadow-lg">
+                  <div className="flex items-start">
+                    <div className="flex-shrink-0">
+                      <div className="w-12 h-12 bg-yellow-400 rounded-full flex items-center justify-center text-2xl">
+                        ⚠️
+                      </div>
+                    </div>
+                    <div className="ml-4 flex-1">
+                      <h4 className="text-xl font-bold text-gray-900 mb-3">
+                        Unable to Identify This Dish
+                      </h4>
+                      <ul className="space-y-2 mb-4">
+                        <li className="flex items-start text-gray-700">
+                          <span className="text-orange-500 mr-2 font-bold">•</span>
+                          <span>The dish is not in my training dataset of 20+ South Indian dishes</span>
+                        </li>
+                        <li className="flex items-start text-gray-700">
+                          <span className="text-orange-500 mr-2 font-bold">•</span>
+                          <span>The image quality or lighting needs improvement</span>
+                        </li>
+                        <li className="flex items-start text-gray-700">
+                          <span className="text-orange-500 mr-2 font-bold">•</span>
+                          <span>The food presentation differs from my training examples</span>
+                        </li>
+                      </ul>
+                      <div className="bg-white/70 rounded-lg p-4 border border-yellow-200">
+                        <p className="text-sm text-gray-800 font-medium mb-1">💡 Suggestion:</p>
+                        <p className="text-sm text-gray-700">
+                          Try taking a clearer photo with better lighting, or ensure the dish is one of the popular South Indian items I'm trained to recognize.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <button
+                  onClick={handleReset}
+                  className="w-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white px-6 py-4 rounded-xl font-semibold transition-all shadow-lg hover:shadow-xl flex items-center justify-center"
+                >
+                  <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                  Try Another Photo
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </div>
-    </div>
-  );
-};
+    );
+  };
   
   return (
     <>

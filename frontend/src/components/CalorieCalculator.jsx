@@ -296,6 +296,9 @@ const handleSaveToDashboard = () => {
     return;
   }
 
+  // Get the selected goal title for macro calculation
+  const selectedGoalTitle = goalCards.find(g => g.id === selectedGoal)?.title || 'Maintain Weight';
+
   const dashboardData = {
     profile: {
       currentWeight: parseFloat(formData.weight),
@@ -306,7 +309,9 @@ const handleSaveToDashboard = () => {
       age: result.userInfo.age,
       height: result.userInfo.height,
       gender: result.userInfo.gender,
-      dailyCalorieGoal: result.goals[selectedGoal]
+      dailyCalorieGoal: result.goals[selectedGoal],
+      goalType: selectedGoalTitle,  // NEW: Save the goal type for macro calculations
+      selectedGoalId: selectedGoal   // NEW: Save the goal ID
     },
     weightLog: [{
       date: new Date().toISOString().split('T')[0],
@@ -316,41 +321,70 @@ const handleSaveToDashboard = () => {
   };
 
   localStorage.setItem('macromate_progress', JSON.stringify(dashboardData));
-  alert('✅ Goals saved to Progress Dashboard!');
+  alert('✅ Goals saved to Progress Dashboard & Food Log!');
 };
-  const ExpandableSection = ({ title, isExpanded, onToggle, children }) => (
-    <motion.div 
-      className="bg-white rounded-2xl shadow-lg overflow-hidden mb-6"
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4 }}
-    >
-      <button
-        onClick={onToggle}
-        className="w-full px-6 py-4 flex items-center justify-between hover:bg-gray-50 transition-colors"
-      >
-        <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">
-          📚 {title}
-        </h3>
-        {isExpanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
-      </button>
-      <AnimatePresence>
-        {isExpanded && (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: 'auto', opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.3 }}
-            className="overflow-hidden"
-          >
-            <div className="px-6 pb-6 text-gray-700 leading-relaxed">
-              {children}
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </motion.div>
-  );
+
+const handleSaveToFoodLog = () => {
+  const selectedGoalTitle = goalCards.find(g => g.id === selectedGoal)?.title || 'Maintain Weight';
+  const selectedCalories = result.goals[selectedGoal];
+  const selectedMacrosData = calculateMacros(selectedCalories, selectedGoalTitle);
+
+  // ALSO save to progress dashboard so FoodLog's green banner shows correct goals
+  const dashboardData = {
+    profile: {
+      currentWeight: parseFloat(formData.weight),
+      goalWeight: parseFloat(formData.weight), // Default to current weight if not set
+      currentBodyFat: null,
+      targetBodyFat: null,
+      startDate: new Date().toISOString().split('T')[0],
+      age: result.userInfo.age,
+      height: result.userInfo.height,
+      gender: result.userInfo.gender,
+      dailyCalorieGoal: selectedCalories,
+      goalType: selectedGoalTitle,
+      selectedGoalId: selectedGoal
+    },
+    weightLog: [{
+      date: new Date().toISOString().split('T')[0],
+      weight: parseFloat(formData.weight),
+      bodyFat: null
+    }]
+  };
+  
+  // Save to progress dashboard
+  localStorage.setItem('macromate_progress', JSON.stringify(dashboardData));
+
+  // Create a food log entry with the selected calories and macros
+  const foodLogEntry = {
+    id: Date.now(),
+    name: `${selectedGoalTitle} Daily Target`,
+    calories: selectedCalories,
+    protein: selectedMacrosData.protein.grams,
+    carbs: selectedMacrosData.carbs.grams,
+    fat: selectedMacrosData.fat.grams,
+    mealType: 'target',
+    timestamp: new Date().toISOString(),
+    isTarget: true
+  };
+
+  // Get today's date
+  const today = new Date().toISOString().split('T')[0];
+  
+  // Load existing food log for today
+  const existingLog = localStorage.getItem(`macromate_foodlog_${today}`);
+  let foodLog = existingLog ? JSON.parse(existingLog) : [];
+  
+  // Remove any existing target entries
+  foodLog = foodLog.filter(item => !item.isTarget);
+  
+  // Add new target
+  foodLog.unshift(foodLogEntry);
+  
+  // Save back to localStorage
+  localStorage.setItem(`macromate_foodlog_${today}`, JSON.stringify(foodLog));
+  
+  alert('✅ Daily target saved to Food Log & Progress Dashboard! Your calorie and macro goals are now synced everywhere.');
+};
 
   if (result) {
     const selectedMacros = calculateMacros(
@@ -537,6 +571,74 @@ const handleSaveToDashboard = () => {
     💾 Save to Progress Dashboard
   </motion.button>
 </motion.div>
+
+<motion.div 
+  initial={{ opacity: 0, y: 20 }}
+  animate={{ opacity: 1, y: 0 }}
+  transition={{ delay: 1.05 }}
+  className="bg-gradient-to-r from-purple-50 to-indigo-100 rounded-2xl p-6 md:p-8 mb-8 border-2 border-purple-200"
+>
+  <h3 className="text-2xl font-bold text-gray-800 mb-3 flex items-center">
+    <span className="text-3xl mr-3">📝</span>
+    Save to Food Log
+  </h3>
+  <p className="text-gray-700 mb-4">
+    Want to track this goal in your daily food log? Save your selected calorie target and macros directly to today's food log.
+  </p>
+
+  <div className="bg-white/70 rounded-xl p-4 mb-4">
+    <h4 className="font-semibold text-gray-800 mb-3">Selected Target:</h4>
+    <div className="flex items-center justify-between mb-2">
+      <span className="text-gray-700">Goal:</span>
+      <span className="font-bold text-purple-600">
+        {goalCards.find(g => g.id === selectedGoal)?.title}
+      </span>
+    </div>
+    <div className="flex items-center justify-between mb-2">
+      <span className="text-gray-700">Calories:</span>
+      <span className="font-bold text-orange-600">
+        {result.goals[selectedGoal]} cal/day
+      </span>
+    </div>
+    <div className="grid grid-cols-3 gap-2 mt-3 pt-3 border-t border-gray-200">
+      <div className="text-center">
+        <p className="text-xs text-gray-600">Protein</p>
+        <p className="font-bold text-blue-600">
+          {calculateMacros(result.goals[selectedGoal], goalCards.find(g => g.id === selectedGoal)?.title).protein.grams}g
+        </p>
+      </div>
+      <div className="text-center">
+        <p className="text-xs text-gray-600">Carbs</p>
+        <p className="font-bold text-yellow-600">
+          {calculateMacros(result.goals[selectedGoal], goalCards.find(g => g.id === selectedGoal)?.title).carbs.grams}g
+        </p>
+      </div>
+      <div className="text-center">
+        <p className="text-xs text-gray-600">Fat</p>
+        <p className="font-bold text-green-600">
+          {calculateMacros(result.goals[selectedGoal], goalCards.find(g => g.id === selectedGoal)?.title).fat.grams}g
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <motion.button 
+    whileHover={{ scale: 1.02 }}
+    whileTap={{ scale: 0.98 }}
+    onClick={handleSaveToFoodLog} 
+    className="w-full py-3 bg-gradient-to-r from-purple-500 to-indigo-600 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all flex items-center justify-center"
+  >
+    <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+    </svg>
+    Save Calories & Macros to Food Log
+  </motion.button>
+
+  <p className="text-xs text-gray-600 mt-3 text-center">
+    💡 This will set your daily target in the food log. You can change it anytime by selecting a different goal.
+  </p>
+</motion.div>
+
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}

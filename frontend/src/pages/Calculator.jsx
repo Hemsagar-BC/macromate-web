@@ -4,6 +4,7 @@ import { calculateCards } from '../constants';
 import ProgressDashboard from '../components/ProgressDashboard.jsx';
 import CalorieCalculator from '../components/CalorieCalculator';
 import BodyFatCalculator from '../components/BodyFatCalculator';
+
 // Particle Background Component
 const ParticleBackground = () => {
   const [particles, setParticles] = useState([]);
@@ -106,7 +107,8 @@ const CalculatorCard = ({ card, onClick }) => {
   );
 };
 
-const Calculate = ({ navigateToPage }) => {
+// CHANGE 1: Update component signature to accept progressData and onProgressDataChange
+const Calculate = ({ navigateToPage, progressData, onProgressDataChange }) => {
   const [activeCalculator, setActiveCalculator] = useState(null);
 
   const handleCardClick = (cardId) => {
@@ -121,12 +123,15 @@ const Calculate = ({ navigateToPage }) => {
     navigateToPage('home');
   };
 
+  // CHANGE 2: Update ProgressDashboard to include the new props
   if (activeCalculator === 'bmi') {
-  return <ProgressDashboard 
-    onBack={handleBackToCalculators} 
-    navigateToCalculator={(calcId) => setActiveCalculator(calcId)}
-  />;
-}
+    return <ProgressDashboard 
+      onBack={handleBackToCalculators} 
+      navigateToCalculator={(calcId) => setActiveCalculator(calcId)}
+      initialData={progressData}
+      onDataChange={onProgressDataChange}
+    />;
+  }
 
   if (activeCalculator === 'calories') {
     return <CalorieCalculator onBack={handleBackToCalculators} handleBackToHero={handleBackToHero} />;
@@ -135,6 +140,7 @@ const Calculate = ({ navigateToPage }) => {
   if (activeCalculator === 'bodyfat') {
     return <BodyFatCalculator onBack={handleBackToCalculators} handleBackToHero={handleBackToHero} />;
   }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-orange-50 relative overflow-hidden">
       <ParticleBackground />

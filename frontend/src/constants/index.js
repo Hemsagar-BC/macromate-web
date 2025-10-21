@@ -151,12 +151,16 @@ export const foodCards = [
     features: ["AI Recognition", "Instant Results", "Portion Estimation"]
   },
   {
-    id: "converter",
-    title: "Fitness Chatbot",
-    description: "Chat with our AI fitness coach for quick workout tips and diet advice",
-    icon: "⚡",
+    id: "foodlog",
+    title: "Daily Food Log",
+    description: "Track your daily meals and monitor your nutrition goals with our comprehensive food logging system",
+    icon: "📝",
     color: "from-orange-300 to-orange-500",
-    features: ["Instant Results", "Portion Estimation", "Offline Support"]
+    features: ["Track all meals & snacks",
+      "Real-time macro tracking",
+      "Daily nutrition summary",
+  ]
+    
   }
 ];
 

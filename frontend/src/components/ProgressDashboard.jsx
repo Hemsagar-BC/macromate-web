@@ -1,14 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { Target, TrendingDown, Calendar, Plus } from 'lucide-react';
+import { Plus } from 'lucide-react';
 
-const ProgressDashboard = ({ onBack, navigateToCalculator }) => {
-  // Load data from localStorage
+const ProgressDashboard = ({ onBack, navigateToCalculator, initialData, onDataChange }) => {
   const loadData = () => {
-    const saved = localStorage.getItem('macromate_progress');
-    if (saved) {
-      return JSON.parse(saved);
+    // Use initialData from props if available, otherwise return empty state
+    if (initialData && initialData.profile.currentWeight) {
+      return initialData;
     }
     return {
       profile: {
@@ -23,25 +22,28 @@ const ProgressDashboard = ({ onBack, navigateToCalculator }) => {
   };
 
   const [data, setData] = useState(loadData());
+
+  // Update parent component whenever data changes
+  const updateData = (newData) => {
+    setData(newData);
+    if (onDataChange) {
+      onDataChange(newData);
+    }
+  };
   const [showAddEntry, setShowAddEntry] = useState(false);
   const [showEditGoals, setShowEditGoals] = useState(false);
-const [editForm, setEditForm] = useState({
-  currentWeight: '',
-  goalWeight: '',
-  currentBodyFat: '',
-  targetBodyFat: ''
-});
-  const [activeTab, setActiveTab] = useState('weight'); // 'weight' or 'bodyfat'
+  const [editForm, setEditForm] = useState({
+    currentWeight: '',
+    goalWeight: '',
+    currentBodyFat: '',
+    targetBodyFat: ''
+  });
+  const [activeTab, setActiveTab] = useState('weight');
   const [newEntry, setNewEntry] = useState({
     date: new Date().toISOString().split('T')[0],
     weight: '',
     bodyFat: ''
   });
-
-  // Save data to localStorage
-  useEffect(() => {
-    localStorage.setItem('macromate_progress', JSON.stringify(data));
-  }, [data]);
 
   const hasData = data.profile.currentWeight && data.weightLog.length > 0;
 
@@ -52,7 +54,7 @@ const [editForm, setEditForm] = useState({
     const targetBodyFat = prompt('Enter your target body fat % (optional):');
     
     if (currentWeight && goalWeight) {
-      setData({
+      const newData = {
         ...data,
         profile: {
           currentWeight: parseFloat(currentWeight),
@@ -66,7 +68,8 @@ const [editForm, setEditForm] = useState({
           weight: parseFloat(currentWeight),
           bodyFat: currentBodyFat ? parseFloat(currentBodyFat) : null
         }]
-      });
+      };
+      updateData(newData);
     }
   };
 
@@ -82,15 +85,17 @@ const [editForm, setEditForm] = useState({
       bodyFat: newEntry.bodyFat ? parseFloat(newEntry.bodyFat) : null
     };
 
-    setData(prev => ({
-      ...prev,
+    const newData = {
+      ...data,
       profile: {
-        ...prev.profile,
+        ...data.profile,
         currentWeight: entry.weight,
-        currentBodyFat: entry.bodyFat || prev.profile.currentBodyFat
+        currentBodyFat: entry.bodyFat || data.profile.currentBodyFat
       },
-      weightLog: [...prev.weightLog, entry].sort((a, b) => new Date(a.date) - new Date(b.date))
-    }));
+      weightLog: [...data.weightLog, entry].sort((a, b) => new Date(a.date) - new Date(b.date))
+    };
+    
+    updateData(newData);
 
     setNewEntry({
       date: new Date().toISOString().split('T')[0],
@@ -100,10 +105,39 @@ const [editForm, setEditForm] = useState({
     setShowAddEntry(false);
   };
 
+  const handleDeleteEntry = (indexToDelete) => {
+    if (data.weightLog.length === 1) {
+      alert('Cannot delete the only entry. You need at least one entry to track progress.');
+      return;
+    }
+
+    if (window.confirm('Are you sure you want to delete this entry?')) {
+      const reversedIndex = data.weightLog.length - 1 - indexToDelete;
+      const updatedLog = data.weightLog.filter((_, index) => index !== reversedIndex);
+      
+      const latestEntry = updatedLog[updatedLog.length - 1];
+      
+      const newData = {
+        ...data,
+        profile: {
+          ...data.profile,
+          currentWeight: latestEntry.weight,
+          currentBodyFat: latestEntry.bodyFat || data.profile.currentBodyFat
+        },
+        weightLog: updatedLog
+      };
+      
+      updateData(newData);
+    }
+  };
+
   const formatDate = (dateStr) => {
     const date = new Date(dateStr);
-    const options = { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' };
-    return date.toLocaleDateString('en-US', options);
+    return date.toLocaleDateString('en-US', { 
+      month: 'short', 
+      day: 'numeric', 
+      year: 'numeric'
+    });
   };
 
   const formatChartDate = (dateStr) => {
@@ -137,7 +171,6 @@ const [editForm, setEditForm] = useState({
     }
   };
 
-  // Empty State
   if (!hasData) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-50 to-orange-50 pt-20">
@@ -219,7 +252,6 @@ const [editForm, setEditForm] = useState({
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-orange-50 pt-20 pb-12">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Header */}
         <motion.div 
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -232,67 +264,58 @@ const [editForm, setEditForm] = useState({
             <svg className="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
             </svg>
-            Back to Calculators
+            <span className="hidden sm:inline">Back to Calculators</span>
           </button>
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={() => setShowAddEntry(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-orange-500 to-orange-600 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all"
-          >
-            <Plus className="w-5 h-5" />
-            <span className="hidden sm:inline">Add Entry</span>
-          </motion.button>
+          <h1 className="text-xl md:text-2xl font-bold text-gray-800">Progress Dashboard</h1>
         </motion.div>
 
-        {/* Weight Tracker Card */}
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           className="bg-white rounded-2xl shadow-xl p-6 md:p-8 mb-6"
         >
-         <div className="flex items-center justify-between mb-6">
-  <h2 className="text-2xl font-bold text-gray-800">Weight Tracker</h2>
-  <div className="flex gap-2">
-    <motion.button
-      whileHover={{ scale: 1.05 }}
-      whileTap={{ scale: 0.95 }}
-      onClick={() => {
-        setEditForm({
-          currentWeight: data.profile.currentWeight || '',
-          goalWeight: data.profile.goalWeight || '',
-          currentBodyFat: data.profile.currentBodyFat || '',
-          targetBodyFat: data.profile.targetBodyFat || ''
-        });
-        setShowEditGoals(true);
-      }}
-      className="px-4 py-2 border-2 border-orange-500 text-orange-600 rounded-lg hover:bg-orange-50 transition-colors font-semibold text-sm"
-    >
-      ⚙️ Edit
-    </motion.button>
-    <motion.button
-      whileHover={{ scale: 1.05 }}
-      whileTap={{ scale: 0.95 }}
-      onClick={() => setShowAddEntry(true)}
-      className="p-2 bg-orange-100 text-orange-600 rounded-lg hover:bg-orange-200 transition-colors"
-    >
-      <Plus className="w-5 h-5" />
-    </motion.button>
-  </div>
-</div>
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-xl md:text-2xl font-bold text-gray-800">Weight Tracker</h2>
+            <div className="flex gap-2">
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => {
+                  setEditForm({
+                    currentWeight: data.profile.currentWeight || '',
+                    goalWeight: data.profile.goalWeight || '',
+                    currentBodyFat: data.profile.currentBodyFat || '',
+                    targetBodyFat: data.profile.targetBodyFat || ''
+                  });
+                  setShowEditGoals(true);
+                }}
+                className="px-3 md:px-4 py-2 border-2 border-orange-500 text-orange-600 rounded-lg hover:bg-orange-50 transition-colors font-semibold text-xs md:text-sm"
+              >
+                <span className="hidden sm:inline">⚙️ </span>Edit Goals
+              </motion.button>
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => setShowAddEntry(true)}
+                className="flex items-center gap-2 px-3 md:px-4 py-2 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-lg shadow-lg hover:shadow-xl transition-all font-semibold text-xs md:text-sm"
+              >
+                <Plus className="w-4 h-4" />
+                <span>Add Entry</span>
+              </motion.button>
+            </div>
+          </div>
 
           <div className="grid grid-cols-2 gap-4 mb-6">
             <div className="bg-gray-50 rounded-xl p-4">
               <div className="text-sm text-gray-600 mb-1">Current Weight</div>
-              <div className="text-3xl font-bold text-gray-800">{data.profile.currentWeight} kg</div>
+              <div className="text-2xl md:text-3xl font-bold text-gray-800">{data.profile.currentWeight} kg</div>
             </div>
             <div className="bg-orange-50 rounded-xl p-4">
               <div className="text-sm text-gray-600 mb-1">Target Weight</div>
-              <div className="text-3xl font-bold text-orange-600">{data.profile.goalWeight} kg</div>
+              <div className="text-2xl md:text-3xl font-bold text-orange-600">{data.profile.goalWeight} kg</div>
             </div>
           </div>
 
-          {/* Progress Bar for Weight */}
           <div className="mb-6">
             <div className="flex justify-between items-center mb-2">
               <span className="text-sm font-medium text-gray-700">Progress</span>
@@ -312,21 +335,19 @@ const [editForm, setEditForm] = useState({
             </div>
           </div>
 
-          {/* Body Fat Section (if available) */}
           {data.profile.currentBodyFat && data.profile.targetBodyFat && (
             <>
               <div className="grid grid-cols-2 gap-4 mb-6 pt-6 border-t border-gray-200">
                 <div className="bg-blue-50 rounded-xl p-4">
                   <div className="text-sm text-gray-600 mb-1">Current Body Fat</div>
-                  <div className="text-3xl font-bold text-blue-600">{data.profile.currentBodyFat}%</div>
+                  <div className="text-2xl md:text-3xl font-bold text-blue-600">{data.profile.currentBodyFat}%</div>
                 </div>
                 <div className="bg-green-50 rounded-xl p-4">
                   <div className="text-sm text-gray-600 mb-1">Target Body Fat</div>
-                  <div className="text-3xl font-bold text-green-600">{data.profile.targetBodyFat}%</div>
+                  <div className="text-2xl md:text-3xl font-bold text-green-600">{data.profile.targetBodyFat}%</div>
                 </div>
               </div>
 
-              {/* Progress Bar for Body Fat */}
               <div className="mb-6">
                 <div className="flex justify-between items-center mb-2">
                   <span className="text-sm font-medium text-gray-700">Body Fat Progress</span>
@@ -348,7 +369,6 @@ const [editForm, setEditForm] = useState({
             </>
           )}
 
-          {/* Chart Tabs */}
           <div className="border-b border-gray-200 mb-4">
             <div className="flex gap-6">
               <button
@@ -376,7 +396,6 @@ const [editForm, setEditForm] = useState({
             </div>
           </div>
 
-          {/* Weight Chart */}
           {activeTab === 'weight' && (
             <div className="h-64 mb-6">
               <ResponsiveContainer width="100%" height="100%">
@@ -411,7 +430,6 @@ const [editForm, setEditForm] = useState({
                     dot={{ fill: '#f97316', r: 5 }}
                     activeDot={{ r: 7 }}
                   />
-                  {/* Goal line */}
                   <Line 
                     type="monotone" 
                     dataKey={() => data.profile.goalWeight} 
@@ -425,7 +443,6 @@ const [editForm, setEditForm] = useState({
             </div>
           )}
 
-          {/* Body Fat Chart */}
           {activeTab === 'bodyfat' && data.profile.currentBodyFat && (
             <div className="h-64 mb-6">
               <ResponsiveContainer width="100%" height="100%">
@@ -460,7 +477,6 @@ const [editForm, setEditForm] = useState({
                     dot={{ fill: '#3b82f6', r: 5 }}
                     activeDot={{ r: 7 }}
                   />
-                  {/* Goal line */}
                   {data.profile.targetBodyFat && (
                     <Line 
                       type="monotone" 
@@ -476,39 +492,48 @@ const [editForm, setEditForm] = useState({
             </div>
           )}
 
-          {/* Entries */}
           <div>
             <h3 className="text-lg font-bold text-gray-800 mb-4">Recent Entries</h3>
-            <div className="space-y-3 max-h-64 overflow-y-auto">
+            <div className="space-y-3 max-h-80 overflow-y-auto pr-2">
               {data.weightLog.slice().reverse().map((entry, index) => (
                 <motion.div
                   key={index}
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: index * 0.05 }}
-                  className="flex justify-between items-center p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+                  className="flex justify-between items-center p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors group"
                 >
-                  <div className="flex-1">
-                    <div className="font-semibold text-gray-800">
-                      {entry.weight} kg
+                  <div className="flex-1 min-w-0">
+                    <div className="font-semibold text-gray-800 flex flex-wrap items-center gap-2">
+                      <span>{entry.weight} kg</span>
                       {entry.bodyFat && (
-                        <span className="ml-3 text-blue-600">• {entry.bodyFat}% BF</span>
+                        <span className="text-blue-600">• {entry.bodyFat}% BF</span>
+                      )}
+                      {index === 0 && (
+                        <span className="px-2 py-0.5 bg-orange-100 text-orange-600 text-xs font-semibold rounded-full">
+                          Latest
+                        </span>
                       )}
                     </div>
-                    <div className="text-sm text-gray-500">{formatDate(entry.date)}</div>
+                    <div className="text-sm text-gray-500 truncate">{formatDate(entry.date)}</div>
                   </div>
-                  {index === 0 && (
-                    <span className="px-3 py-1 bg-orange-100 text-orange-600 text-xs font-semibold rounded-full">
-                      Latest
-                    </span>
-                  )}
+                  <motion.button
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.9 }}
+                    onClick={() => handleDeleteEntry(index)}
+                    className="ml-3 p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors opacity-0 group-hover:opacity-100 flex-shrink-0"
+                    title="Delete entry"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                  </motion.button>
                 </motion.div>
               ))}
             </div>
           </div>
         </motion.div>
 
-        {/* Quick Action Cards */}
         <div className="grid md:grid-cols-2 gap-4">
           <motion.button
             initial={{ opacity: 0, y: 20 }}
@@ -550,7 +575,6 @@ const [editForm, setEditForm] = useState({
         </div>
       </div>
 
-      {/* Add Entry Modal */}
       {showAddEntry && (
         <motion.div
           initial={{ opacity: 0 }}
@@ -624,7 +648,6 @@ const [editForm, setEditForm] = useState({
         </motion.div>
       )}
 
-{/* Edit Goals Modal */}
       {showEditGoals && (
         <motion.div
           initial={{ opacity: 0 }}
@@ -702,7 +725,7 @@ const [editForm, setEditForm] = useState({
                     currentBodyFat: editForm.currentBodyFat ? parseFloat(editForm.currentBodyFat) : data.profile.currentBodyFat,
                     targetBodyFat: editForm.targetBodyFat ? parseFloat(editForm.targetBodyFat) : data.profile.targetBodyFat
                   };
-                  setData({...data, profile: updatedProfile});
+                  updateData({...data, profile: updatedProfile});
                   setShowEditGoals(false);
                   alert('✅ Goals updated successfully!');
                 }}
