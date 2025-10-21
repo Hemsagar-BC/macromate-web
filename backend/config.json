@@ -26,7 +26,7 @@
     "vegetable_pulao"
   ],
   "num_classes": 24,
-  "confidence_threshold": 0.85,
+  "confidence_threshold": 0.80,
   "image_size": [
     224,
     224

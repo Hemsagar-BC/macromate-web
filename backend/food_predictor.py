@@ -65,7 +65,7 @@ class FoodClassifier:
                 config = json.load(f)
             
             self.class_names = config['class_names']
-            self.confidence_threshold = config.get('confidence_threshold', 0.85)
+            self.confidence_threshold = config.get('confidence_threshold', 0.80)
             self.image_size = tuple(config.get('image_size', [224, 224]))
             
             # Compile the model if it wasn't compiled during loading
