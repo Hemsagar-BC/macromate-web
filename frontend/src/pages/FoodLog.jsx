@@ -419,13 +419,16 @@ const FoodLog = ({ navigateToPage }) => {
   };
 
   const calculateTotals = () => {
-    return foodItems.reduce((totals, item) => ({
+  // Exclude target entries from totals calculation
+  return foodItems
+    .filter(item => !item.isTarget)
+    .reduce((totals, item) => ({
       calories: totals.calories + item.calories,
       protein: totals.protein + item.protein,
       carbs: totals.carbs + item.carbs,
       fat: totals.fat + item.fat
     }), { calories: 0, protein: 0, carbs: 0, fat: 0 });
-  };
+};
 
   // Calculate macros using SAME logic as Calorie Calculator
   const calculateMacrosFromCalories = (calories, weight, goalType = 'maintain') => {
