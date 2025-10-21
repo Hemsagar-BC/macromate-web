@@ -15,6 +15,13 @@ import tensorflow as tf
 app = Flask(__name__)
 CORS(app)  # Enable CORS for React frontend
 
+CORS(app, origins=[
+    "https://macromate-web.vercel.app",  # Your Vercel production URL
+    "http://localhost:3000",              # React dev server
+    "http://localhost:5173",              # Vite dev server
+    "http://localhost:5174"               # Alternative Vite port
+])
+
 UPLOAD_FOLDER = 'uploads'
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg'}
 MAX_FILE_SIZE = 16 * 1024 * 1024  # 16MB
