@@ -415,8 +415,9 @@ const FoodLog = ({ navigateToPage }) => {
   };
 
   const getMealItems = (mealType) => {
-    return foodItems.filter(item => item.mealType === mealType);
-  };
+  // Exclude target entries from meal items
+  return foodItems.filter(item => item.mealType === mealType && !item.isTarget);
+};
 
   const calculateTotals = () => {
   // Exclude target entries from totals calculation
