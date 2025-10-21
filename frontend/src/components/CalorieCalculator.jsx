@@ -324,7 +324,25 @@ const handleSaveToDashboard = () => {
   alert('✅ Goals saved to Progress Dashboard & Food Log!');
 };
 
-
+const handleSaveToFoodLog = () => {
+  const selectedGoalTitle = goalCards.find(g => g.id === selectedGoal)?.title || 'Maintain Weight';
+  const macros = calculateMacros(result.goals[selectedGoal], selectedGoalTitle);
+  
+  const foodLogData = {
+    date: new Date().toISOString().split('T')[0],
+    dailyGoals: {
+      calories: result.goals[selectedGoal],
+      protein: macros.protein.grams,
+      carbs: macros.carbs.grams,
+      fat: macros.fat.grams
+    },
+    goalType: selectedGoalTitle,
+    selectedGoalId: selectedGoal
+  };
+  
+  localStorage.setItem('macromate_foodlog_goals', JSON.stringify(foodLogData));
+  alert('✅ Calorie goals saved to Food Log!');
+};
 
   if (result) {
     const selectedMacros = calculateMacros(
