@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { foodCards } from '../constants';
 import FoodLog from './FoodLog'; // Import FoodLog component
+import { API_BASE } from '../api'; 
 
 // Particle Background Component
 const ParticleBackground = () => {
@@ -235,7 +236,7 @@ const Food = ({ navigateToPage }) => {
       formData.append('image', selectedFile);
 
       try {
-        const response = await fetch('http://localhost:5000/api/predict/food', {
+        const response = await fetch(`${API_BASE}/api/predict/food`, {
           method: 'POST',
           body: formData,
         });

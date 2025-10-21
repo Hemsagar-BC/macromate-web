@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { API_BASE } from '../api';
 
 
 const BodyFatCalculator = ({ onBack, handleBackToHero }) => {
@@ -65,7 +66,7 @@ const handleSaveToDashboard = () => {
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch('http://localhost:5000/api/calculate/bodyfat', {
+      const response = await fetch(`${API_BASE}/api/calculate/bodyfat`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData)
