@@ -541,10 +541,12 @@ def calculate_bodyfat():
 
 
 # ============================================
-# MAIN
+# MAIN ENTRY POINT (Render-compatible)
 # ============================================
 
 if __name__ == '__main__':
+    import os
+
     print("\n" + "="*70)
     print("MACROMATE FITNESS BACKEND SERVER")
     print("="*70)
@@ -553,16 +555,13 @@ if __name__ == '__main__':
     if food_classifier:
         print(f"Available Food Classes: {len(food_classifier.class_names)}")
     print("\nAvailable endpoints:")
-    print("  POST /api/predict/food    - Food Image Analysis (AI)")
-    print("  GET  /api/health/food-model - Food Model Health Check")
-    print("  POST /api/calculate/bmi    - BMI Calculator")
-    print("  POST /api/calculate/calories - Calorie Calculator") 
-    print("  POST /api/calculate/bodyfat - Body Fat Predictor")
-    print("  GET  /api/health           - Health Check")
-    print("\nServer running on http://localhost:5000")
+    print("  POST /api/predict/food           - Food Image Analysis (AI)")
+    print("  GET  /api/health/food-model      - Food Model Health Check")
+    print("  POST /api/calculate/bmi          - BMI Calculator")
+    print("  POST /api/calculate/calories     - Calorie Calculator") 
+    print("  POST /api/calculate/bodyfat      - Body Fat Predictor")
+    print("  GET  /api/health                 - Health Check")
     print("="*70 + "\n")
-    
-    app.run(debug=True, host='0.0.0.0', port=5000)
-    
-    if __name__ == '__main__':
-      app.run(debug=False, host='0.0.0.0', port=5000)
+
+    port = int(os.environ.get("PORT", 8080))  # Render sets this dynamically
+    app.run(host='0.0.0.0', port=port)
