@@ -6,10 +6,12 @@
 Built with **React + Flask**, MacroMate demonstrates **frontend development**, **AI integration**, and **API design** skills.  
 
 **Key Highlights:**
-- 🤖 Ridge Regression body fat predictor with ±3.133% MAE  
-- 🍱 MobileNetV2 CNN recognizing 20+ Indian food items  
-- ⚙️ Flask-based REST API for seamless ML/DL integration  
-- 📊 Interactive UI with Recharts, Tailwind CSS, and Framer Motion  
+- 🤖 **Ridge Regression** body fat predictor with **±3.133% MAE**
+- 📸 **Fine-tuned MobileNetV2** recognizing **20+ Indian dishes**
+- 🕷️ **Custom Dataset**: Web-scraped 1000+ food images using Python
+- ⚙️ **Flask-based**: REST API for seamless ML/DL integration  
+- 📊 Interactive UI with Recharts, Tailwind CSS, and Framer Motion
+- 💾 LocalStorage-based data persistence
 
 ---
 
@@ -41,12 +43,12 @@ Features: ['Age', 'Weight', 'Height', 'Neck', 'Abdomen', 'Forearm', 'Wrist']
 MAE = ±3.133%
 pickle.dump(final_model, open('bodyfat.pkl', 'wb'))
 
--Ridge Regression outperformed Linear, Lasso & Random Forest
--L2 regularization improved stability on small datasets
--Fast inference (~2ms on CPU)
+- Ridge Regression outperformed Linear, Lasso & Random Forest
+- L2 regularization improved stability on small datasets
+- Fast inference (~2ms on CPU)
 
-## 🍱 4. Food Image Classifier (MobileNetV2)
-
+### 🍱 Food Image Classifier (MobileNetV2)
+```
 Input (224×224×3)
 ↓
 MobileNetV2 (frozen base)
@@ -56,13 +58,26 @@ GlobalAveragePooling2D
 Dense(256, ReLU, L2=0.01) 
 ↓
 Dense(20, Softmax)
+```
 
--Fine-tuned last 40 layers for domain-specific accuracy
--Achieved ~85% test accuracy, 92% top-3 accuracy
--Uses TensorFlow 2.15 + Keras for deployment
+**Training Configuration:**
+```python
+# Initial Training (Transfer Learning)
+- Base Model: MobileNetV2 (frozen)
+- Optimizer: Adam(lr=0.0005)
+- Batch Size: 32
+- Data Split: 70% train, 15% val, 15% test
+- Augmentation: RandomFlip, RandomRotation(0.2), RandomZoom(0.2)
+
+# Fine-Tuning Phase
+- Unfroze: Last 40 layers
+- Optimizer: Adam(lr=0.0001)  # 5x lower
+- Epochs: 20 additional
+- Result: +5-10% accuracy boost
+```
 
 
-## 🧰 5. Tech Stack  
+## 🧰 4. Tech Stack  
 
 | Tool / Library | Purpose |
 |----------------|----------|
@@ -80,8 +95,8 @@ Dense(20, Softmax)
 | 🧱 **Render** | Backend deployment (Flask API) |
 | 💾 **LocalStorage** | Client-side data persistence for progress tracking |
 
-## 📂6. Project Structure  
-
+## 📂5. Project Structure  
+```
 demo/
 ├── backend/
 │ ├── app.py # Flask backend entry point
@@ -110,22 +125,22 @@ demo/
 │
 ├── .gitignore
 └── README.md
-
+```
 ## 💻 6. For Cloning & Running Locally
 
-🧩 Prerequisites
+### 🧩 Prerequisites
 ```
 Node.js >= 18.x  
 Python >= 3.9
 ```
-Frontend Setup
+### Frontend Setup
 ```
 git clone https://github.com/Hemsagar-BC/macromate-web.git
 cd frontend
 npm install
 npm run dev  # Runs at http://localhost:5173
 ```
-Backend Setup
+### Backend Setup
 ```
 cd backend
 python -m venv venv   
