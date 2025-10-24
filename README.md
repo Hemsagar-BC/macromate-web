@@ -37,15 +37,27 @@ Built with **React + Flask**, MacroMate demonstrates **frontend development**, *
 
 ### 🧩 Body Fat Predictor (Ridge Regression)
 
-# Final Model
+**Training Process:**
+```python
+# Model Selection: Tested 4 algorithms
+Linear Regression:     MAE = 3.899
+Ridge Regression:      MAE = 3.133  ← Best
+Lasso Regression:      MAE = 3.842
+Random Forest:         MAE = 4.156
+
+# Final Model Configuration
 Ridge(alpha=1.0)
 Features: ['Age', 'Weight', 'Height', 'Neck', 'Abdomen', 'Forearm', 'Wrist']
-MAE = ±3.133%
-pickle.dump(final_model, open('bodyfat.pkl', 'wb'))
-
+Training: 80/20 split with random_state=2
+```
 - Ridge Regression outperformed Linear, Lasso & Random Forest
 - L2 regularization improved stability on small datasets
 - Fast inference (~2ms on CPU)
+  
+**Model Export:**
+```python
+pickle.dump(final_model, open('bodyfat.pkl', 'wb'))
+```
 
 ### 🍱 Food Image Classifier (MobileNetV2)
 ```
@@ -101,7 +113,7 @@ demo/
 ├── backend/
 │ ├── app.py # Flask backend entry point
 │ ├── food_predictor.py # Food recognition using ML model
-│ ├── bodyfat.py # Body fat percentage calculation API
+│ ├── bodyfat.pkl # Trained model
 │ ├── macros.json # Nutrition data reference file
 │ ├── model.h5 # Trained TensorFlow model
 │ ├── config.json # Model and API configuration
@@ -109,11 +121,10 @@ demo/
 │ ├── Dockerfile # Docker build configuration
 │ ├── Procfile # Render deployment setup
 │ ├── runtime.txt # Python version info
-│ └── uploads/ # Uploaded food images (temp storage)
 │
 ├── frontend/
 │ ├── src/
-│ │ ├── assets/ # Images, icons, and static files
+│ │ ├── assets/ #static files
 │ │ ├── components/ # Reusable UI components (Navbar, Footer, etc.)
 │ │ ├── pages/ # Main feature pages (Calculator, Food, Dashboard)
 │ │ ├── constants/ # Shared constants and config
