@@ -170,7 +170,7 @@ Python >= 3.9
 ### Clone the Repository
 ```
 git clone https://github.com/Hemsagar-BC/macromate-web.git
-cd Macromate
+cd macromate-web
 ```
 ### Backend Setup
 ```

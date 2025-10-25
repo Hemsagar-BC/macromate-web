@@ -203,34 +203,6 @@ const Calculate = ({ navigateToPage, progressData, onProgressDataChange }) => {
             />
           ))}
         </div>
-
-        <div className="mt-16 text-center">
-          <div className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-lg p-8 max-w-4xl mx-auto">
-            <h3 className="text-2xl font-bold text-gray-800 mb-4">
-              Need Help Choosing?
-            </h3>
-            <p className="text-gray-600 mb-6">
-              Not sure which calculator to use first? We recommend starting with the BMI calculator to understand your current health status, then moving to calorie planning for your goals.
-            </p>
-            <div className="grid md:grid-cols-3 gap-6">
-              <div className="text-center">
-                <div className="text-3xl mb-2">1️⃣</div>
-                <div className="font-semibold text-gray-800">Start with BMI</div>
-                <div className="text-sm text-gray-600">Know your baseline</div>
-              </div>
-              <div className="text-center">
-                <div className="text-3xl mb-2">2️⃣</div>
-                <div className="font-semibold text-gray-800">Plan Calories</div>
-                <div className="text-sm text-gray-600">Set your daily goals</div>
-              </div>
-              <div className="text-center">
-                <div className="text-3xl mb-2">3️⃣</div>
-                <div className="font-semibold text-gray-800">Optimize Macros</div>
-                <div className="text-sm text-gray-600">Fine-tune nutrition</div>
-              </div>
-            </div>
-          </div>
-        </div>
       </div>
     </div>
   );

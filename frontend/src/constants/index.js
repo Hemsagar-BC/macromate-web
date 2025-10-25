@@ -6,9 +6,10 @@ export const featuresData = {
   points: [
     {
       icon: "🎯",
-      title: "Precise BMI Tracking",
-      description: "Calculate your Body Mass Index and get personalized health insights"
+      title: "Progress Dashboard",
+      description: "Track your body weight and body fat trends with interactive progress insights" 
     },
+    
     {
       icon: "🔥",
       title: "Smart Calorie Planning",
@@ -137,10 +138,10 @@ export const foodCards = [
   {
     id: "search",
     title: "Food Search",
-    description: "Search our extensive database for nutrition information",
+    description: "Search our database for nutrition information",
     icon: "🔍",
     color: "from-orange-400 to-orange-600",
-    features: ["10,000+ Foods", "Detailed Macros", "Portion Control"]
+    features: ["Get accurate values", "Detailed Macros", "Portion Control"]
   },
   {
     id: "upload",
