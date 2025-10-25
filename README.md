@@ -8,7 +8,7 @@ Built with **React + Flask**, MacroMate demonstrates **frontend development**, *
 **Key Highlights:**
 - 🤖 **Ridge Regression** body fat predictor with **±3.133% MAE**
 - 📸 **Fine-tuned MobileNetV2** recognizing **20+ Indian dishes**
-- 🕷️ **Custom Dataset**: Web-scraped 1000+ food images using Python
+- 🕷️ **Custom Dataset**: Web-scraped 2000+ food images using Python
 - ⚙️ **Flask-based**: REST API for seamless ML/DL integration  
 - 📊 Interactive UI with Recharts, Tailwind CSS, and Framer Motion
 - 💾 LocalStorage-based data persistence
@@ -33,11 +33,19 @@ Built with **React + Flask**, MacroMate demonstrates **frontend development**, *
 
 ---
 
-## 🧠 3. How ML & DL Models Work  
+## 🧠 3. Machine Learning & Deep Learning Models
 
 ### 🧩 Body Fat Predictor (Ridge Regression)
+   #### Predicts Body Fat % using 7 key body measurements
 
-**Training Process:**
+**⚙️ Algorithm & Performance**
+
+- Model: Ridge Regression (optimized)
+- Mean Absolute Error (MAE): ~3.133%
+- Inference Speed: ~2ms on CPU
+- Regularization: L2 — improves stability on small datasets
+
+**🧰 Training Process:**
 ```python
 # Model Selection: Tested 4 algorithms
 Linear Regression:     MAE = 3.899
@@ -50,16 +58,16 @@ Ridge(alpha=1.0)
 Features: ['Age', 'Weight', 'Height', 'Neck', 'Abdomen', 'Forearm', 'Wrist']
 Training: 80/20 split with random_state=2
 ```
-- Ridge Regression outperformed Linear, Lasso & Random Forest
-- L2 regularization improved stability on small datasets
-- Fast inference (~2ms on CPU)
-  
-**Model Export:**
+
+**💾 Model Export:**
 ```python
 pickle.dump(final_model, open('bodyfat.pkl', 'wb'))
 ```
 
 ### 🍱 Food Image Classifier (MobileNetV2)
+ #### Real-time food recognition and nutritional breakdown from Indian cuisine images.
+
+**⚙️ Architecture Overview**
 ```
 Input (224×224×3)
 ↓
@@ -72,7 +80,7 @@ Dense(256, ReLU, L2=0.01)
 Dense(20, Softmax)
 ```
 
-**Training Configuration:**
+**📊 Training Configuration:**
 ```python
 # Initial Training (Transfer Learning)
 - Base Model: MobileNetV2 (frozen)
@@ -87,16 +95,25 @@ Dense(20, Softmax)
 - Epochs: 20 additional
 - Result: +5-10% accuracy boost
 ```
+ **🧠 Model Optimization Techniques**
 
+- Transfer Learning: Leveraged MobileNetV2 pre-trained on ImageNet
+- Fine-tuning: Unfroze top 40 layers for domain adaptation
+- Regularization: Dropout (0.5) + L2 (0.01) to prevent overfitting
+- Data Augmentation: Random flips, rotations, zoom, brightness
+- Confidence Threshold: Optimized at 0.80 for best accuracy/acceptance balance
+
+**📈 Results**
+- Accuracy: 80%+ (after fine-tuning)
+- Performance: Fast real-time inference
+- Output: Nutrition info (calories, protein, carbs, fat)
 
 ## 🧰 4. Tech Stack  
 
 | Tool / Library | Purpose |
 |----------------|----------|
 | ⚛️ **React 18 + Vite** | Frontend framework with fast HMR for modern UI development |
-| 🎨 **Tailwind CSS** | Utility-first CSS framework for responsive, clean styling |
 | 🎞️ **Framer Motion** | Animations and transitions for interactive UI components |
-| 📊 **Recharts** | Data visualization for progress and analytics |
 | 🐍 **Flask 3.x** | Lightweight backend framework for REST API development |
 | 🤖 **TensorFlow 2.15** | Deep learning model inference (MobileNetV2 fine-tuning) |
 | 📈 **scikit-learn 1.3** | Machine learning library for Ridge Regression model |
@@ -144,12 +161,10 @@ demo/
 Node.js >= 18.x  
 Python >= 3.9
 ```
-### Frontend Setup
+### Clone the Repository
 ```
 git clone https://github.com/Hemsagar-BC/macromate-web.git
-cd frontend
-npm install
-npm run dev  # Runs at http://localhost:5173
+cd Macromate
 ```
 ### Backend Setup
 ```
@@ -159,4 +174,9 @@ venv\Scripts\activate  # Windows
 pip install -r requirements.txt
 python app.py  # Runs at http://localhost:8080
 ```
-
+### Frontend Setup
+```
+cd frontend
+npm install
+npm run dev  # Runs at http://localhost:5173
+```
