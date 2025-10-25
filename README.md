@@ -36,7 +36,6 @@ Built with **React + Flask**, MacroMate demonstrates **frontend development**, *
 ## 🧠 3. Machine Learning & Deep Learning Models
 
 ### 🧩 Body Fat Predictor (Ridge Regression)
-   #### Predicts Body Fat % using 7 key body measurements
 
 **⚙️ Algorithm & Performance**
 
@@ -63,6 +62,7 @@ Training: 80/20 split with random_state=2
 ```python
 pickle.dump(final_model, open('bodyfat.pkl', 'wb'))
 ```
+
 
 ### 🍱 Food Image Classifier (MobileNetV2)
  #### Real-time food recognition and nutritional breakdown from Indian cuisine images.
@@ -108,6 +108,8 @@ Dense(20, Softmax)
 - Performance: Fast real-time inference
 - Output: Nutrition info (calories, protein, carbs, fat)
 
+---
+
 ## 🧰 4. Tech Stack  
 
 | Tool / Library | Purpose |
@@ -123,6 +125,8 @@ Dense(20, Softmax)
 | ☁️ **Vercel** | Frontend deployment (React) |
 | 🧱 **Render** | Backend deployment (Flask API) |
 | 💾 **LocalStorage** | Client-side data persistence for progress tracking |
+
+---
 
 ## 📂5. Project Structure  
 ```
@@ -154,6 +158,8 @@ demo/
 ├── .gitignore
 └── README.md
 ```
+---
+
 ## 💻 6. For Cloning & Running Locally
 
 ### 🧩 Prerequisites
