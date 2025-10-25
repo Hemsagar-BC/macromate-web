@@ -135,65 +135,245 @@ const Food = ({ navigateToPage }) => {
     return <FoodLog navigateToPage={navigateToPage} onBack={() => setShowFoodLog(false)} />;
   }
 
-  const MockFoodSearch = () => {
-    const [searchQuery, setSearchQuery] = useState('');
-    const [results] = useState([
-      { name: 'Apple (Medium)', calories: 95, protein: 0.5, carbs: 25, fat: 0.3 },
-      { name: 'Chicken Breast (100g)', calories: 165, protein: 31, carbs: 0, fat: 3.6 },
-      { name: 'Rice (1 cup cooked)', calories: 205, protein: 4.3, carbs: 45, fat: 0.4 }
-    ]);
+  // Curated Food Database - 18 Common Foods
+const foodDatabase = [
+  // Fruits
+  { name: 'Apple', category: 'Fruits', calories: 95, protein: 0.5, carbs: 25, fat: 0.3, serving: '1 medium (182g)' },
+  { name: 'Banana', category: 'Fruits', calories: 105, protein: 1.3, carbs: 27, fat: 0.4, serving: '1 medium (118g)' },
+  { name: 'Orange', category: 'Fruits', calories: 62, protein: 1.2, carbs: 15, fat: 0.2, serving: '1 medium (131g)' },
+  
+  // Vegetables
+  { name: 'Broccoli', category: 'Vegetables', calories: 55, protein: 4, carbs: 11, fat: 0.6, serving: '1 cup (156g)' },
+  { name: 'Carrot', category: 'Vegetables', calories: 25, protein: 0.6, carbs: 6, fat: 0.1, serving: '1 medium (61g)' },
+  { name: 'Potato', category: 'Vegetables', calories: 163, protein: 4.3, carbs: 37, fat: 0.2, serving: '1 medium (173g)' },
+  
+  // Proteins
+  { name: 'Chicken Breast', category: 'Proteins', calories: 165, protein: 31, carbs: 0, fat: 3.6, serving: '100g cooked' },
+  { name: 'Egg', category: 'Proteins', calories: 78, protein: 6.3, carbs: 0.6, fat: 5.3, serving: '1 large (50g)' },
+  { name: 'Salmon', category: 'Proteins', calories: 206, protein: 22, carbs: 0, fat: 13, serving: '100g cooked' },
+  
+  // Grains
+  { name: 'White Rice', category: 'Grains', calories: 205, protein: 4.3, carbs: 45, fat: 0.4, serving: '1 cup cooked (158g)' },
+  { name: 'Brown Rice', category: 'Grains', calories: 216, protein: 5, carbs: 45, fat: 1.8, serving: '1 cup cooked (195g)' },
+  { name: 'Oats', category: 'Grains', calories: 166, protein: 5.9, carbs: 28, fat: 3.6, serving: '1 cup cooked (234g)' },
+  { name: 'Whole Wheat Bread', category: 'Grains', calories: 81, protein: 4, carbs: 14, fat: 1.1, serving: '1 slice (28g)' },
+  
+  // Dairy
+  { name: 'Milk', category: 'Dairy', calories: 149, protein: 8, carbs: 12, fat: 8, serving: '1 cup (244ml)' },
+  { name: 'Greek Yogurt', category: 'Dairy', calories: 100, protein: 17, carbs: 6, fat: 0.7, serving: '170g container' },
+  { name: 'Cheese', category: 'Dairy', calories: 113, protein: 7, carbs: 1, fat: 9, serving: '1 slice (28g)' },
+  
+  // Nuts
+  { name: 'Almonds', category: 'Nuts', calories: 164, protein: 6, carbs: 6, fat: 14, serving: '1 oz (28g)' },
+  { name: 'Peanut Butter', category: 'Nuts', calories: 188, protein: 8, carbs: 7, fat: 16, serving: '2 tbsp (32g)' },
+];
 
-    return (
-      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-        <div className="bg-white rounded-2xl p-6 max-w-2xl w-full max-h-[80vh] overflow-y-auto">
-          <div className="flex justify-between items-center mb-6">
-            <h3 className="text-2xl font-bold text-gray-800">Food Search</h3>
-            <button onClick={closeModal} className="text-gray-500 hover:text-gray-700">
+const MockFoodSearch = () => {
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('All');
+  const [selectedFood, setSelectedFood] = useState(null);
+
+  const categories = ['All', 'Fruits', 'Vegetables', 'Proteins', 'Grains', 'Dairy', 'Nuts'];
+
+  const filteredResults = foodDatabase.filter(food => {
+    const matchesSearch = food.name.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesCategory = selectedCategory === 'All' || food.category === selectedCategory;
+    return matchesSearch && matchesCategory;
+  });
+
+  return (
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[85vh] overflow-hidden flex flex-col">
+        {/* Header */}
+        <div className="bg-gradient-to-r from-orange-500 to-orange-600 text-white px-6 py-4">
+          <div className="flex justify-between items-center">
+            <div>
+              <h3 className="text-2xl font-bold">Food Search</h3>
+              <p className="text-orange-100 text-sm mt-1">{foodDatabase.length} Common Foods Database</p>
+            </div>
+            <button 
+              onClick={closeModal}
+              className="text-white hover:bg-white/20 rounded-full p-2 transition-all"
+            >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               </svg>
             </button>
           </div>
-          
-          <div className="mb-6">
-            <input
-              type="text"
-              placeholder="Search for food items..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-            />
-          </div>
+        </div>
 
-          <div className="space-y-4">
-            {results.map((food, index) => (
-              <div key={index} className="bg-gray-50 rounded-lg p-4 hover:bg-gray-100 transition-colors">
-                <h4 className="font-semibold text-gray-800 mb-2">{food.name}</h4>
-                <div className="grid grid-cols-4 gap-4 text-sm">
-                  <div>
-                    <span className="text-gray-600">Calories:</span>
-                    <div className="font-semibold text-orange-600">{food.calories}</div>
-                  </div>
-                  <div>
-                    <span className="text-gray-600">Protein:</span>
-                    <div className="font-semibold">{food.protein}g</div>
-                  </div>
-                  <div>
-                    <span className="text-gray-600">Carbs:</span>
-                    <div className="font-semibold">{food.carbs}g</div>
-                  </div>
-                  <div>
-                    <span className="text-gray-600">Fat:</span>
-                    <div className="font-semibold">{food.fat}g</div>
-                  </div>
-                </div>
-              </div>
+        {/* Search & Filter Section */}
+        <div className="p-6 border-b border-gray-200 space-y-4">
+          <input
+            type="text"
+            placeholder="Search for food items (e.g., apple, chicken, rice)..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none"
+          />
+          
+          {/* Category Pills */}
+          <div className="flex flex-wrap gap-2">
+            {categories.map(category => (
+              <button
+                key={category}
+                onClick={() => setSelectedCategory(category)}
+                className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
+                  selectedCategory === category
+                    ? 'bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-md'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                {category}
+              </button>
             ))}
           </div>
         </div>
+
+        {/* Results Section */}
+        <div className="flex-1 overflow-y-auto p-6">
+          {selectedFood ? (
+            <div className="space-y-6">
+              <button
+                onClick={() => setSelectedFood(null)}
+                className="text-orange-600 hover:text-orange-700 font-medium flex items-center gap-2"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                </svg>
+                Back to results
+              </button>
+
+              {/* Food Details Card */}
+              <div className="bg-gradient-to-br from-orange-50 to-white border-2 border-orange-200 rounded-xl p-6">
+                <div className="mb-6">
+                  <div className="flex items-center gap-3 mb-2">
+                    <span className="text-4xl">
+                      {selectedFood.category === 'Fruits' && '🍎'}
+                      {selectedFood.category === 'Vegetables' && '🥦'}
+                      {selectedFood.category === 'Proteins' && '🍗'}
+                      {selectedFood.category === 'Grains' && '🌾'}
+                      {selectedFood.category === 'Dairy' && '🥛'}
+                      {selectedFood.category === 'Nuts' && '🥜'}
+                    </span>
+                    <div>
+                      <h4 className="text-3xl font-bold text-gray-800">{selectedFood.name}</h4>
+                      <p className="text-orange-600 font-medium">{selectedFood.serving}</p>
+                    </div>
+                  </div>
+                  <span className="inline-block px-3 py-1 bg-orange-100 text-orange-700 rounded-full text-sm font-medium">
+                    {selectedFood.category}
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div className="bg-white rounded-lg p-5 text-center shadow-sm border-2 border-orange-200">
+                    <div className="text-4xl mb-2">🔥</div>
+                    <div className="text-3xl font-bold text-orange-600 mb-1">
+                      {selectedFood.calories}
+                    </div>
+                    <div className="text-sm font-semibold text-gray-700">Calories</div>
+                    <div className="text-xs text-gray-500 mt-1">kcal</div>
+                  </div>
+
+                  <div className="bg-white rounded-lg p-5 text-center shadow-sm border-2 border-blue-200">
+                    <div className="text-4xl mb-2">💪</div>
+                    <div className="text-3xl font-bold text-blue-600 mb-1">
+                      {selectedFood.protein}g
+                    </div>
+                    <div className="text-sm font-semibold text-gray-700">Protein</div>
+                    <div className="text-xs text-gray-500 mt-1">grams</div>
+                  </div>
+
+                  <div className="bg-white rounded-lg p-5 text-center shadow-sm border-2 border-yellow-200">
+                    <div className="text-4xl mb-2">🌾</div>
+                    <div className="text-3xl font-bold text-yellow-600 mb-1">
+                      {selectedFood.carbs}g
+                    </div>
+                    <div className="text-sm font-semibold text-gray-700">Carbs</div>
+                    <div className="text-xs text-gray-500 mt-1">grams</div>
+                  </div>
+
+                  <div className="bg-white rounded-lg p-5 text-center shadow-sm border-2 border-green-200">
+                    <div className="text-4xl mb-2">🥑</div>
+                    <div className="text-3xl font-bold text-green-600 mb-1">
+                      {selectedFood.fat}g
+                    </div>
+                    <div className="text-sm font-semibold text-gray-700">Fat</div>
+                    <div className="text-xs text-gray-500 mt-1">grams</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <>
+              {filteredResults.length === 0 ? (
+                <div className="text-center py-12">
+                  <div className="text-6xl mb-4">😕</div>
+                  <p className="text-gray-600 text-lg mb-2">No results found</p>
+                  <p className="text-gray-500 text-sm">Try a different search term or category</p>
+                </div>
+              ) : (
+                <div className="grid md:grid-cols-2 gap-4">
+                  {filteredResults.map((food, index) => (
+                    <div
+                      key={index}
+                      onClick={() => setSelectedFood(food)}
+                      className="bg-gray-50 hover:bg-orange-50 rounded-xl p-5 cursor-pointer transition-all hover:shadow-lg border-2 border-transparent hover:border-orange-200 group"
+                    >
+                      <div className="flex items-start justify-between mb-3">
+                        <div className="flex items-center gap-3">
+                          <span className="text-3xl">
+                            {food.category === 'Fruits' && '🍎'}
+                            {food.category === 'Vegetables' && '🥦'}
+                            {food.category === 'Proteins' && '🍗'}
+                            {food.category === 'Grains' && '🌾'}
+                            {food.category === 'Dairy' && '🥛'}
+                            {food.category === 'Nuts' && '🥜'}
+                          </span>
+                          <div>
+                            <h4 className="font-bold text-gray-800 text-lg group-hover:text-orange-600 transition-colors">
+                              {food.name}
+                            </h4>
+                            <p className="text-xs text-gray-500">{food.category}</p>
+                          </div>
+                        </div>
+                        <svg className="w-5 h-5 text-gray-400 group-hover:text-orange-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                        </svg>
+                      </div>
+                      
+                      <div className="grid grid-cols-4 gap-2 text-center">
+                        <div>
+                          <div className="text-xs text-gray-500 mb-1">Cal</div>
+                          <div className="font-bold text-orange-600">{food.calories}</div>
+                        </div>
+                        <div>
+                          <div className="text-xs text-gray-500 mb-1">Pro</div>
+                          <div className="font-bold text-blue-600">{food.protein}g</div>
+                        </div>
+                        <div>
+                          <div className="text-xs text-gray-500 mb-1">Carbs</div>
+                          <div className="font-bold text-yellow-600">{food.carbs}g</div>
+                        </div>
+                        <div>
+                          <div className="text-xs text-gray-500 mb-1">Fat</div>
+                          <div className="font-bold text-green-600">{food.fat}g</div>
+                        </div>
+                      </div>
+                      
+                      <p className="text-xs text-gray-500 mt-3 text-center">{food.serving}</p>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </>
+          )}
+        </div>
       </div>
-    );
-  };
+    </div>
+  );
+};
 
   const RealPhotoUpload = () => {
     const [selectedFile, setSelectedFile] = useState(null);
