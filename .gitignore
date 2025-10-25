@@ -1,16 +1,30 @@
+.venv/
+```
+
+Your `.gitignore` should look like this:
+```
 # Ignore large model files
-   *.gguf
-   *.bin
-   
-   # Ignore model folders
-   backend/models/
-   models/
-   
-   # Python cache
-   __pycache__/
-   *.pyc
-   *.pyo
-   
-   # Virtual environment
-   .venv/
-   venv/
+*.gguf
+*.bin
+
+# Ignore model folders
+backend/models/
+models/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+
+# Virtual environment
+.venv/
+venv/
+env/
+ENV/
+
+# Node modules
+node_modules/
+
+# Environment
+.env
+.env.local
