@@ -357,7 +357,7 @@ const MockFoodSearch = () => {
                           <div className="font-bold text-yellow-600">{food.carbs}g</div>
                         </div>
                         <div>
-                          <div className="text-xs text-gray-500 mb-1">fat</div>
+                          <div className="text-xs text-gray-500 mb-1">Fat</div>
                           <div className="font-bold text-green-600">{food.fat}g</div>
                         </div>
                       </div>
