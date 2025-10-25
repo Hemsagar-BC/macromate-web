@@ -832,31 +832,6 @@ const MockFoodSearch = () => {
               />
             ))}
           </div>
-
-          <div className="mt-16 text-center">
-            <div className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-lg p-8 max-w-4xl mx-auto">
-              <h3 className="text-2xl font-bold text-gray-800 mb-4">
-                Why Use Our Food Analysis?
-              </h3>
-              <div className="grid md:grid-cols-3 gap-6 mt-8">
-                <div className="text-center">
-                  <div className="text-3xl mb-3">🎯</div>
-                  <h4 className="font-semibold text-gray-800 mb-2">Accurate Results</h4>
-                  <p className="text-gray-600 text-sm">AI-powered recognition with high accuracy for instant nutritional analysis</p>
-                </div>
-                <div className="text-center">
-                  <div className="text-3xl mb-3">⚡</div>
-                  <h4 className="font-semibold text-gray-800 mb-2">Lightning Fast</h4>
-                  <p className="text-gray-600 text-sm">Get nutritional information in seconds, not minutes</p>
-                </div>
-                <div className="text-center">
-                  <div className="text-3xl mb-3">📊</div>
-                  <h4 className="font-semibold text-gray-800 mb-2">Detailed Breakdown</h4>
-                  <p className="text-gray-600 text-sm">Complete macro and micronutrient information for better tracking</p>
-                </div>
-              </div>
-            </div>
-          </div>
         </div>
       </div>
 
